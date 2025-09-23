@@ -17,5 +17,6 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.on('tags-updated', (_event, updated) => callback(updated)),
   onToggleNoImageView: (callback: (enabled: boolean) => void) => {
     ipcRenderer.on('toggle-no-tag-images', (_, enabled: boolean) => callback(enabled))
-  }
+  },
+  selectFolder: () => ipcRenderer.invoke('select-data-folder')
 })

@@ -130,11 +130,7 @@ function createWindow(): void {
 
   Menu.setApplicationMenu(menu)
 
-  if (isDev) {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/alt.html'))
-  } else {
-    mainWindow.loadFile(path.join(__dirname, '../renderer/alt.html'))
-  }
+  mainWindow.loadFile(path.join(__dirname, '../renderer/alt.html'))
 }
 
 app.on('ready', createWindow)
@@ -230,4 +226,19 @@ ipcMain.handle('rename-image', async (_event, oldName: string, newName: string) 
 
 ipcMain.handle('rename-image-file', async (_event, oldName: string, newName: string) => {
   return await renameImageFile(tagsPath, imagesPath, oldName, newName)
+})
+
+ipcMain.handle('select-data-folder', async () => {
+  const folder = chooseDataFolder()
+  if (!folder) return null
+
+  initDataFolder(folder)
+
+  if (isDev) {
+    mainWindow?.loadURL('http://localhost:5173') // Vite dev server
+  } else {
+    mainWindow?.loadFile(path.join(__dirname, '../renderer/index.html')) // production
+  }
+
+  return folder
 })

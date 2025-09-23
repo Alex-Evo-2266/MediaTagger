@@ -13,6 +13,7 @@ interface API {
   renameImgFile: (oldName: string, newName: string) => Promise<boolean>
   onTagsUpdated: (callback: (updated: boolean) => void) => Electron.IpcRenderer
   onToggleNoImageView: (callback: (enabled: boolean) => void) => void
+  selectFolder: () => void
 }
 
 declare global {
