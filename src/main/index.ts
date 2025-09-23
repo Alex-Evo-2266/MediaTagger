@@ -70,7 +70,7 @@ function createWindow() {
           }
         },
         {
-          label: "Синхронизировать теги",
+          label: "Синхронизировать изображения",
           click: (_menuItem) => {
             if (!mainWindow) return;
 
