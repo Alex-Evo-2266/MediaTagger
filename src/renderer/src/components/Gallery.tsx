@@ -11,15 +11,15 @@ export default function Gallery() {
   const [images, setImages] = useState<Image[]>([]);
     const [selected, setSelected] = useState<string | null>(null);
     const [tagInput, setTagInput] = useState<string>("");
+    const [search, setSearch] = useState<string>("");
     const [tags, setTags] = useState<string[]>([]);
 
   const load = useCallback(() => {
-    window.api.loadImage({ filter: {tags:tags}, search: "" }, page).then((res) => {
+    window.api.loadImage({ filter: {tags:tags}, search: search }, page).then((res) => {
       setImages(res.imgs);
       setPages(res.pages);
-      console.log(res)
     });
-  }, [page, tags]);
+  }, [page, tags, search]);
 
   useEffect(() => {
     load();
@@ -37,6 +37,14 @@ export default function Gallery() {
       }
       setTagInput("");
     }
+  };
+
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value)
+    window.api.loadImage({ filter: {tags:tags}, search: e.target.value }, page).then((res) => {
+      setImages(res.imgs);
+      setPages(res.pages);
+    });
   };
 
   const handleDeleteTag = (tagToDelete: string) => {
@@ -67,6 +75,14 @@ export default function Gallery() {
             />
           ))}
         </Stack>
+        <TextField
+          label="Поиск"
+          variant="outlined"
+          size="small"
+          value={search}
+          onChange={handleSearchChange}
+          fullWidth
+        />
       </Box>
 
       {/* Прокручиваемая область */}
