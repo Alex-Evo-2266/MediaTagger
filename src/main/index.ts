@@ -16,38 +16,25 @@ import { createTags, renameInFile, saveTags } from './tags'
 import { Filter, Images } from './types'
 
 let mainWindow: BrowserWindow | null = null
+let userDataPath: string
+let configPath: string
+let tagsPath: string
+let imagesPath: string
 const IMG_IN_PAGE = 10
+const isDev = process.env.NODE_ENV === 'development'
 
-const userDataPath = app.getAppPath() // путь к папке, где лежит исполняемый файл
+function chooseDataFolder(): string | undefined {
+  const result = dialog.showOpenDialogSync({
+    title: 'Выберите папку для хранения данных',
+    properties: ['openDirectory', 'createDirectory']
+  })
 
-console.log('путь', userDataPath)
-
-const configPath = path.join(userDataPath, 'config.json')
-const tagsPath = path.join(userDataPath, 'tags.json')
-const imagesPath = path.join(userDataPath, 'images')
-
-function createFile(filePath: string): void {
-  // Проверяем, есть ли файл
-  if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify({}), 'utf-8') // создаём пустой JSON
-    console.log('Файл создан')
-  } else {
-    console.log('Файл уже существует')
+  if (!result || result.length === 0) {
+    return undefined
   }
-}
 
-function createDir(dirPath: string): void {
-  if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true })
-    console.log('Папка создана')
-  } else {
-    console.log('Папка уже существует')
-  }
+  return result[0]
 }
-
-createDir(imagesPath)
-createFile(configPath)
-createFile(tagsPath)
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -66,6 +53,30 @@ function createWindow(): void {
     {
       label: 'Основное',
       submenu: [
+        {
+          label: 'Выбрать папку данных',
+          click: () => {
+            const folder = chooseDataFolder()
+            if (!folder) return
+
+            initDataFolder(folder)
+
+            if (isDev) {
+              mainWindow?.loadURL('http://localhost:5173') // Vite dev server
+            } else {
+              mainWindow?.loadFile(path.join(__dirname, '../renderer/index.html')) // production
+            }
+
+            // Можно уведомить renderer о путях
+            mainWindow?.webContents.once('dom-ready', () => {
+              mainWindow?.webContents.send('paths-initialized', {
+                configPath,
+                tagsPath,
+                imagesPath
+              })
+            })
+          }
+        },
         {
           label: 'Добавить изображение',
           accelerator: 'CmdOrCtrl+I',
@@ -119,12 +130,28 @@ function createWindow(): void {
 
   Menu.setApplicationMenu(menu)
 
-  mainWindow.webContents.openDevTools()
-
-  mainWindow.loadURL('http://localhost:5173') // Vite dev server
+  if (isDev) {
+    mainWindow.loadFile(path.join(__dirname, '../renderer/alt.html'))
+  } else {
+    mainWindow.loadFile(path.join(__dirname, '../renderer/alt.html'))
+  }
 }
 
 app.on('ready', createWindow)
+
+function initDataFolder(folder: string): void {
+  userDataPath = folder
+  configPath = path.join(userDataPath, 'config.json')
+  tagsPath = path.join(userDataPath, 'tags.json')
+  imagesPath = path.join(userDataPath, 'images')
+
+  if (!fs.existsSync(userDataPath)) fs.mkdirSync(userDataPath, { recursive: true })
+  if (!fs.existsSync(imagesPath)) fs.mkdirSync(imagesPath, { recursive: true })
+  if (!fs.existsSync(configPath)) fs.writeFileSync(configPath, JSON.stringify({}), 'utf-8')
+  if (!fs.existsSync(tagsPath)) fs.writeFileSync(tagsPath, JSON.stringify({}), 'utf-8')
+
+  console.log('Папка данных выбрана:', userDataPath)
+}
 
 async function addImage(): Promise<boolean> {
   const result = await dialog.showOpenDialog({
