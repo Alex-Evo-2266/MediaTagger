@@ -8,5 +8,6 @@ contextBridge.exposeInMainWorld("api", {
   copyImage: () =>
     ipcRenderer.invoke("copy-image"),
   getImage: (name: string, filter?: Filter) => ipcRenderer.invoke("get-image", name, filter),
-
+  deleteImg: (name:string) => ipcRenderer.invoke("delete-image", name),
+   renameImg: (oldName:string, newName:string) => ipcRenderer.invoke("rename-image", oldName, newName),
 });

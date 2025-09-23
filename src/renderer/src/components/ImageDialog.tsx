@@ -8,20 +8,24 @@ import {
   Stack,
   Chip,
   IconButton,
+  DialogContentText,
 } from "@mui/material";
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
+import DeleteIcon from "@mui/icons-material/Delete";
 import { useState, useEffect, useCallback } from "react";
 import { Filter, Image64 } from "src/preload/types";
 
 export const ImageDialog = ({
         name,
         onClose,
-        filter
+        filter,
+        reload
     }: {
         name:string
         onClose: () => void;
         filter: Filter
+        reload: ()=>void
     }) => {
   const [currentImgName, setCurrentImgName] = useState(name);
   const [tags, setTags] = useState<string[]>([]);
@@ -66,15 +70,35 @@ export const ImageDialog = ({
       window.api.saveTags(file.name, tags).then(() => {
         alert("Теги сохранены");
         setEditing(false);
+        reload()
       });
+    }
+  };
+
+  const handleDeleteImage = () => {
+    if (file) {
+      if (confirm("Удалить изображение безвозвратно?")) {
+        window.api.deleteImg(file.name).then(() => {
+          alert("Изображение удалено");
+          // Если есть следующий — перейти к нему, иначе закрыть
+          reload()
+          if (file.next) {
+            setCurrentImgName(file.next);
+          } else if (file.prev) {
+            setCurrentImgName(file.prev);
+          } else {
+            onClose();
+          }
+        });
+      }
     }
   };
 
   return (
     <Dialog open onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Редактирование изображения</DialogTitle>
+      <DialogTitle>Изображение  {file?.name}</DialogTitle>
       <DialogContent>
-        <Box display="flex" alignItems="center" justifyContent="center" mb={2}>
+        <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
           <IconButton onClick={handlePrev} disabled={!file?.prev}>
             <ArrowBackIosNewIcon />
           </IconButton>
@@ -87,6 +111,8 @@ export const ImageDialog = ({
             <ArrowForwardIosIcon />
           </IconButton>
         </Box>
+
+        <DialogContentText>путь {file?.path}</DialogContentText>
 
         <Stack direction="row" spacing={1} flexWrap="wrap" mb={2}>
           {tags.map((tag) => (
@@ -132,6 +158,15 @@ export const ImageDialog = ({
               <Button variant="contained" onClick={handleSave}>
                 Сохранить
               </Button>
+              <Button
+                color="error"
+                variant="outlined"
+                startIcon={<DeleteIcon />}
+                onClick={handleDeleteImage}
+                disabled={!file}
+            >
+                Удалить
+            </Button>
             </>
           )}
           <Button onClick={onClose}>Закрыть</Button>

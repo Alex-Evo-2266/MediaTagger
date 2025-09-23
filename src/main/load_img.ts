@@ -1,7 +1,7 @@
 import * as fs from "fs";
 import * as path from "path";
 import { Image, Image64 } from "../preload/types";
-import { getTags, loadData } from "./tags";
+import { getTags, loadData, saveData } from "./tags";
 import { Filter } from "./types";
 
 // const SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".bmp"];
@@ -110,5 +110,30 @@ export async function getImage(
   } catch (err) {
     console.error("Ошибка при чтении папки 2:", err);
     return null
+  }
+}
+
+// Удаление изображения
+export async function deleteImage(tagsPath: string, folderPath: string, name: string): Promise<boolean> {
+  try {
+    const tagsFile = loadData(tagsPath);
+    const data = tagsFile[name];
+    if (!data) return false;
+
+    const imgPath = path.join(folderPath, data.path);
+
+    // Удаляем сам файл, если он существует
+    if (fs.existsSync(imgPath)) {
+      fs.unlinkSync(imgPath);
+    }
+
+    // Удаляем запись из JSON
+    delete tagsFile[name];
+    saveData(tagsPath, tagsFile)
+
+    return true;
+  } catch (err) {
+    console.error("Ошибка при удалении изображения:", err);
+    return false;
   }
 }

@@ -2,8 +2,8 @@ import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import { Filter, Images } from "./types";
-import { getImage, getImagesFromFolder, imgbase64 } from "./load_img";
-import { createTags, saveTags } from "./tags";
+import { deleteImage, getImage, getImagesFromFolder, imgbase64 } from "./load_img";
+import { createTags, renameInFile, saveTags } from "./tags";
 
 let mainWindow: BrowserWindow | null = null;
 const IMG_IN_PAGE = 10
@@ -150,4 +150,14 @@ ipcMain.handle("load-image", async (_, filters: Filter, page: number = 0):Promis
 ipcMain.handle("get-image", async (_event, name:string, filter:Filter) => {
   const data = await getImage(tagsPath, imagesPath, name, filter)
   return data
+});
+
+ipcMain.handle("delete-image", async (_event, name:string) => {
+  const data = await deleteImage(tagsPath, imagesPath, name)
+  return data
+});
+
+ipcMain.handle("rename-image", async (_event, oldName:string, newName: string) => {
+  await renameInFile(tagsPath, oldName, newName)
+  return true;
 });

@@ -16,7 +16,7 @@ export function loadData(jsonPath: string):TagsFileType {
 }
 
 // Сохранение JSON
-function saveData(jsonPath: string, data: Record<string, any>) {
+export function saveData(jsonPath: string, data: Record<string, any>) {
   fs.writeFileSync(jsonPath, JSON.stringify(data, null, 2), "utf-8");
 }
 
@@ -46,4 +46,24 @@ export function createTags(baseDir: string, jsonPath: string, filePath: string, 
   };
   data[name].tags = tags;
   saveData(jsonPath, data);
+}
+
+export function getAllTags(tagsPath: string): string[] {
+  const tagsFile = loadData(tagsPath);
+  const allTags = Object.values(tagsFile)
+    .flatMap((item: any) => item.tags ?? [])
+    .map((t: string) => t.toLowerCase());
+
+  // Убираем дубликаты
+  return Array.from(new Set(allTags));
+}
+
+export function renameInFile(tagsPath: string, oldName:string, newName:string) {
+  const tagsFile = loadData(tagsPath);
+  if(newName in tagsFile){
+    throw Error("name alrady exist")
+  }
+  tagsFile[newName] = {...tagsFile[oldName]}
+  delete tagsFile[oldName]
+  saveData(tagsPath, tagsFile)
 }

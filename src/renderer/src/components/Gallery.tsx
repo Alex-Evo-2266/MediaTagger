@@ -86,7 +86,7 @@ export default function Gallery() {
       <Box flex={1} overflow="auto" pr={1}>
         <Grid container spacing={2}>
           {images.map((file) => (
-            <Grid size={{xs: 6, sm: 4, md: 3, lg: 2}} key={file.name}>
+            <Grid key={file.name}>
               <Content file={file} onClick={() => setSelected(file.name)} />
             </Grid>
           ))}
@@ -110,6 +110,7 @@ export default function Gallery() {
             filter={{ filter: {tags:tags}, search: "" }}
             name={selected}
             onClose={() => setSelected(null)}
+            reload={load}
         />
       }
       
@@ -129,7 +130,7 @@ const Content = ({ file, onClick }: { file: Image, onClick: () => void  }) => {
   const isVideo = /\.(mp4|avi|mov)$/i.test(file.fullPath);
 
   return (
-    <Card sx={{ borderRadius: 2, overflow: "hidden", height: 200 }}>
+    <Card sx={{ borderRadius: 2, overflow: "hidden", height: 200, minWidth: 300 }}>
       <CardActionArea onClick={onClick}>
         {isVideo ? (
           <CardMedia component="video" src={dataUrl} controls height="200" />
