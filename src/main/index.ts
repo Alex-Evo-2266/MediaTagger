@@ -147,7 +147,7 @@ ipcMain.handle("load-image", async (_, filters: Filter, page: number = 0):Promis
 });
 
 
-ipcMain.handle("get-image", async (_event, name:string) => {
-  const data = await getImage(tagsPath, imagesPath, name, IMG_IN_PAGE)
+ipcMain.handle("get-image", async (_event, name:string, filter:Filter) => {
+  const data = await getImage(tagsPath, imagesPath, name, filter)
   return data
 });

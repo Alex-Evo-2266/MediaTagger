@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { MediaFile } from "../types";
+import { MediaFile } from "src/preload/types";
 
 type Props = {
   file: MediaFile;

@@ -4,7 +4,7 @@ import { Image, Image64 } from "../preload/types";
 import { getTags, loadData } from "./tags";
 import { Filter } from "./types";
 
-const SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".bmp"];
+// const SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".bmp"];
 
 export async function imgbase64(filePath:string) {
   const ext = path.extname(filePath).toLowerCase();
@@ -38,7 +38,6 @@ export async function getImagesFromFolder(
   try {
     const tagsFile = loadData(tagsPath)
     const items = Object.entries(tagsFile)
-    console.log("filter ", filter)
     const start = page * pageSize;
 
     const filtred: Image[] = items.filter(([name, option])=>{
@@ -63,22 +62,51 @@ export async function getImagesFromFolder(
   }
 }
 
-
 export async function getImage(
   tagsPath: string,
   folderPath: string,
   name: string,
-  pageSize: number = 10
-):Promise<Image64 | null> {
+  filter: Filter
+): Promise<Image64 | null> {
   try {
     const tagsFile = loadData(tagsPath)
-    const data = tagsFile[name]
-    
+    const items = Object.entries(tagsFile)
+
+    const filtred: Image[] = items.filter(([name, option])=>{
+      const containsAll = filter === undefined?true: filter.filter.tags.every(el =>
+        option.tags.some(item => item.toLowerCase() === el.toLowerCase())
+      );
+      return filter === undefined || (name.toLowerCase().includes(filter.search.toLowerCase()) && containsAll)
+    }).map(([name, option])=>({
+      name,
+      tags: option.tags,
+      path: option.path,
+      fullPath: path.join(folderPath, option.path)
+    }))
+
+    const data = filtred.find(item=>item.name === name)
+    if (!data) return null
     const image = data.path
-    console.log(image)
-    const imgPath = path.join(folderPath, image)
+    const imgPath = data.fullPath
     const tags = getTags(folderPath, tagsPath, imgPath)
-    return {path: image, fullPath: imgPath, base64: await imgbase64(imgPath), tags:tags, name}
+
+
+    // Получаем список всех имён
+    const index = filtred.indexOf(data)
+
+    // Определяем prev/next
+    const prev = index > 0 ? filtred[index - 1].name : undefined
+    const next = index < filtred.length - 1 ? filtred[index + 1].name : undefined
+
+    return {
+      path: image,
+      fullPath: imgPath,
+      base64: await imgbase64(imgPath),
+      tags,
+      name,
+      prev,
+      next
+    }
   } catch (err) {
     console.error("Ошибка при чтении папки 2:", err);
     return null

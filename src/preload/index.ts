@@ -7,6 +7,6 @@ contextBridge.exposeInMainWorld("api", {
   loadImage: (filter: Filter, page: number = 0) => ipcRenderer.invoke("load-image", filter, page),
   copyImage: () =>
     ipcRenderer.invoke("copy-image"),
-  getImage: (name: string) => ipcRenderer.invoke("get-image", name),
+  getImage: (name: string, filter?: Filter) => ipcRenderer.invoke("get-image", name, filter),
 
 });

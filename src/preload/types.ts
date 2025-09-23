@@ -27,6 +27,8 @@ export type Image64 = {
   name: string
   base64: string
   tags: string[]
+  next?: string
+  prev?: string
 }
 
 export type Images = {

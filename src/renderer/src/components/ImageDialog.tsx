@@ -12,25 +12,18 @@ import {
 import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import { useState, useEffect, useCallback } from "react";
-import { Image, Image64 } from "src/preload/types";
+import { Filter, Image64 } from "src/preload/types";
 
 export const ImageDialog = ({
         name,
-        page,
-        open,
         onClose,
-        pageSize,
-        pages
+        filter
     }: {
         name:string
-        page: number;
-        open: boolean;
         onClose: () => void;
-        pageSize: number
-        pages: number
+        filter: Filter
     }) => {
   const [currentImgName, setCurrentImgName] = useState(name);
-  const [pagecur, setPage] = useState(page);
   const [tags, setTags] = useState<string[]>([]);
   const [tagInput, setTagInput] = useState("");
   const [editing, setEditing] = useState(false);
@@ -39,45 +32,23 @@ export const ImageDialog = ({
 //   const file = images[currentIndex];
 
   const load = useCallback(() => {
-      window.api.getImage(currentImgName).then((res:Image64|null) => {
+      window.api.getImage(currentImgName, filter).then((res:Image64|null) => {
         setFile(res);
         setTags(res?.tags ?? [])
       });
-    }, [currentImgName]);
+    }, [currentImgName, filter]);
 
   useEffect(() => {
     load();
   }, [load]);
 
-//   useEffect(() => {
-//     if (file) {
-//       window.api.readFileAsBase64(file).then(setDataUrl);
-//     //   window.api.loadTags(file).then((existing: string[]) => setTags(existing || []));
-//       setEditing(false);
-//       setTagInput("");
-//     }
-//   }, [file]);
+  const handlePrev = () => {
+    if (file?.prev) setCurrentImgName(file.prev);
+  };
 
-//   const handlePrev = () => {
-//     if (currentIndex > 0) setCurrentIndex(prev=>prev-1);
-//     else{
-//         if(pagecur > 0) {
-//             setPage(prev=>prev-1)
-//             setCurrentIndex(pageSize - 1)
-//         }
-//     }
-//   };
-
-//   const handleNext = () => {
-//     if (currentIndex < pageSize - 1) setCurrentIndex(prev=>prev + 1);
-//     else{
-//         if(pagecur < pages - 1)
-//         {
-//             setPage(prev=>prev+1)
-//             setCurrentIndex(0)
-//         }
-//     }
-//   };
+  const handleNext = () => {
+    if (file?.next) setCurrentImgName(file.next);
+  };
 
   const handleAddTag = () => {
     if (tagInput.trim() !== "" && !tags.includes(tagInput.trim())) {
@@ -100,21 +71,21 @@ export const ImageDialog = ({
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
+    <Dialog open onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle>Редактирование изображения</DialogTitle>
       <DialogContent>
         <Box display="flex" alignItems="center" justifyContent="center" mb={2}>
-          {/* <IconButton onClick={handlePrev}>
+          <IconButton onClick={handlePrev} disabled={!file?.prev}>
             <ArrowBackIosNewIcon />
-          </IconButton> */}
+          </IconButton>
 
           {file && (
             <Box component="img" src={file.base64} alt="preview" maxHeight="60vh" maxWidth="80%" />
           )}
 
-          {/* <IconButton onClick={handleNext}>
+          <IconButton onClick={handleNext} disabled={!file?.next}>
             <ArrowForwardIosIcon />
-          </IconButton> */}
+          </IconButton>
         </Box>
 
         <Stack direction="row" spacing={1} flexWrap="wrap" mb={2}>

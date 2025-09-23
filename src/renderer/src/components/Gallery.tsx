@@ -1,4 +1,4 @@
-import { Button, Pagination, Card, CardMedia, CardActionArea, Box } from "@mui/material";
+import { Button, Pagination, Card, CardMedia, CardActionArea, Box, TextField, Stack, Chip } from "@mui/material";
 import Grid from "@mui/material/Grid";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import { useCallback, useEffect, useState } from "react";
@@ -8,18 +8,17 @@ import { Image } from "src/preload/types";
 export default function Gallery() {
   const [page, setPage] = useState<number>(0);
   const [pages, setPages] = useState<number>(1);
-  const [imgInPage, setImgInPage] = useState<number>(10);
   const [images, setImages] = useState<Image[]>([]);
     const [selected, setSelected] = useState<string | null>(null);
+    const [tagInput, setTagInput] = useState<string>("");
+    const [tags, setTags] = useState<string[]>([]);
 
   const load = useCallback(() => {
-    window.api.loadImage({ filter: {tags:[]}, search: "" }, page).then((res) => {
-        console.log(res)
+    window.api.loadImage({ filter: {tags:tags}, search: "" }, page).then((res) => {
       setImages(res.imgs);
       setPages(res.pages);
-      setImgInPage(res.imgInPage)
     });
-  }, [page]);
+  }, [page, tags]);
 
   useEffect(() => {
     load();
@@ -34,6 +33,21 @@ export default function Gallery() {
     });
   };
 
+  // добавление тега
+  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && tagInput.trim() !== "") {
+      e.preventDefault();
+      if (!tags.includes(tagInput.trim())) {
+        setTags([...tags, tagInput.trim()]);
+      }
+      setTagInput("");
+    }
+  };
+
+  const handleDeleteTag = (tagToDelete: string) => {
+    setTags(tags.filter((tag) => tag !== tagToDelete));
+  };
+
   return (
     <Box p={2} display="flex" flexDirection="column" height="100vh">
       <Button
@@ -44,6 +58,29 @@ export default function Gallery() {
       >
         Добавить изображения
       </Button>
+
+      {/* Поле для ввода тегов */}
+      <Box mb={2}>
+        <TextField
+          label="Фильтр по тегам"
+          variant="outlined"
+          size="small"
+          value={tagInput}
+          onChange={(e) => setTagInput(e.target.value)}
+          onKeyDown={handleAddTag}
+          fullWidth
+        />
+        <Stack direction="row" spacing={1} mt={1} flexWrap="wrap">
+          {tags.map((tag) => (
+            <Chip
+              key={tag}
+              label={tag}
+              onDelete={() => handleDeleteTag(tag)}
+              color="primary"
+            />
+          ))}
+        </Stack>
+      </Box>
 
       {/* Прокручиваемая область */}
       <Box flex={1} overflow="auto" pr={1}>
@@ -70,12 +107,9 @@ export default function Gallery() {
       {
         selected !== null &&
         <ImageDialog
+            filter={{ filter: {tags:tags}, search: "" }}
             name={selected}
-            open={selected !== null}
             onClose={() => setSelected(null)}
-            page={page}
-            pages={pages}
-            pageSize={imgInPage}
         />
       }
       
