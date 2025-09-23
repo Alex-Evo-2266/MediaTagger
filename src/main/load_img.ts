@@ -62,6 +62,36 @@ export async function getImagesFromFolder(
   }
 }
 
+export async function getImagesFromFolderNotTag(
+  tagsPath: string,
+  folderPath: string,
+  page: number = 0,
+  pageSize: number = 10
+) {
+  try {
+    const tagsFile = loadData(tagsPath)
+    const items = Object.entries(tagsFile)
+    const start = page * pageSize;
+
+    const filtred: Image[] = items
+    .filter(([_, option])=>option.tags.length === 0)
+    .map(([name, option])=>({
+      name,
+      tags: option.tags,
+      path: option.path,
+      fullPath: path.join(folderPath, option.path)
+    }))
+
+    const allPages = Math.ceil(filtred.length / pageSize) 
+    const sliceImage = filtred.slice(start, start + pageSize)
+
+    return {img:sliceImage, pages:allPages}
+  } catch (err) {
+    console.error("Ошибка при чтении папки:", err);
+    return {img:[], pages:1};
+  }
+}
+
 export async function getImage(
   tagsPath: string,
   folderPath: string,

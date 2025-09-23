@@ -1,25 +1,23 @@
-import { Pagination, Box, TextField, Stack, Chip } from "@mui/material";
+import { Pagination, Box} from "@mui/material";
 import Grid from "@mui/material/Grid";
 import { useCallback, useEffect, useState } from "react";
 import { ImageDialog } from "./ImageDialog";
 import { Image } from "src/preload/types";
 import { Content } from "./ItemGallery";
 
-export default function Gallery() {
+export default function GalleryNoTag() {
   const [page, setPage] = useState<number>(0);
   const [pages, setPages] = useState<number>(1);
   const [images, setImages] = useState<Image[]>([]);
     const [selected, setSelected] = useState<string | null>(null);
-    const [tagInput, setTagInput] = useState<string>("");
-    const [tags, setTags] = useState<string[]>([]);
 
   const load = useCallback(() => {
-    window.api.loadImage({ filter: {tags:tags}, search: "" }, page).then((res) => {
+    window.api.loadImageNoTag(page).then((res) => {
+        console.log(res)
       setImages(res.imgs);
       setPages(res.pages);
-      console.log(res)
     });
-  }, [page, tags]);
+  }, [page]);
 
   useEffect(() => {
     load();
@@ -28,46 +26,8 @@ export default function Gallery() {
     });
   }, [load]);
 
-  // добавление тега
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter" && tagInput.trim() !== "") {
-      e.preventDefault();
-      if (!tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()]);
-      }
-      setTagInput("");
-    }
-  };
-
-  const handleDeleteTag = (tagToDelete: string) => {
-    setTags(tags.filter((tag) => tag !== tagToDelete));
-  };
-
   return (
     <Box p={2} display="flex" flexDirection="column" height="100vh">
-
-      {/* Поле для ввода тегов */}
-      <Box mb={2}>
-        <TextField
-          label="Фильтр по тегам"
-          variant="outlined"
-          size="small"
-          value={tagInput}
-          onChange={(e) => setTagInput(e.target.value)}
-          onKeyDown={handleAddTag}
-          fullWidth
-        />
-        <Stack direction="row" spacing={1} mt={1} flexWrap="wrap">
-          {tags.map((tag) => (
-            <Chip
-              key={tag}
-              label={tag}
-              onDelete={() => handleDeleteTag(tag)}
-              color="primary"
-            />
-          ))}
-        </Stack>
-      </Box>
 
       {/* Прокручиваемая область */}
       <Box flex={1} overflow="auto" pr={1}>
@@ -94,7 +54,7 @@ export default function Gallery() {
       {
         selected !== null &&
         <ImageDialog
-            filter={{ filter: {tags:tags}, search: "" }}
+            filter={{ filter: {tags:[]}, search: "" }}
             name={selected}
             onClose={() => setSelected(null)}
             reload={load}

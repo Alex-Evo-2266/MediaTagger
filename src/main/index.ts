@@ -2,7 +2,7 @@ import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import { Filter, Images } from "./types";
-import { deleteImage, getImage, getImagesFromFolder, imgbase64, renameImageFile } from "./load_img";
+import { deleteImage, getImage, getImagesFromFolder, getImagesFromFolderNotTag, imgbase64, renameImageFile } from "./load_img";
 import { createTags, renameInFile, saveTags } from "./tags";
 import { syncTagsWithFiles } from "./sinhron";
 
@@ -55,7 +55,7 @@ function createWindow() {
   // Создаём меню
   const menu = Menu.buildFromTemplate([
     {
-      label: "File",
+      label: "Основное",
       submenu: [
         {
           label: "Добавить изображение",
@@ -94,6 +94,15 @@ function createWindow() {
           label: "Toggle DevTools",
           accelerator: "CmdOrCtrl+Shift+I",
           click: () => mainWindow?.webContents.toggleDevTools()
+        },
+        {
+          label: "Посказать изображения без тегов",
+          type: "checkbox",
+          checked: false,
+          click: (menuItem) => {
+            if (!mainWindow) return;
+            mainWindow.webContents.send("toggle-no-tag-images", menuItem.checked);
+          }
         }
       ]
     }
@@ -152,6 +161,11 @@ ipcMain.handle("readFileAsBase64", async (_, filePath: string) => {
 
 ipcMain.handle("load-image", async (_, filters: Filter, page: number = 0):Promise<Images> => {
   const data = await getImagesFromFolder(tagsPath, imagesPath, filters, page, IMG_IN_PAGE)
+  return {imgs: data.img, page: page + 1, next_img: page + 20, pages: data.pages, imgInPage:IMG_IN_PAGE}
+});
+
+ipcMain.handle("load-image-no-tag", async (_, page: number = 0):Promise<Images> => {
+  const data = await getImagesFromFolderNotTag(tagsPath, imagesPath, page, IMG_IN_PAGE)
   return {imgs: data.img, page: page + 1, next_img: page + 20, pages: data.pages, imgInPage:IMG_IN_PAGE}
 });
 
