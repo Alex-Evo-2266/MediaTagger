@@ -137,3 +137,46 @@ export async function deleteImage(tagsPath: string, folderPath: string, name: st
     return false;
   }
 }
+
+/**
+ * Переименование файла изображения
+ * @param tagsPath путь к JSON с тегами
+ * @param folderPath путь к папке с изображениями
+ * @param oldName текущее имя (ключ в JSON)
+ * @param newName новое имя файла (должно включать расширение)
+ * @returns true если успешно, false при ошибке
+ */
+export async function renameImageFile(
+  tagsPath: string,
+  folderPath: string,
+  oldName: string,
+  newName: string
+): Promise<boolean> {
+  try {
+    const tagsFile = loadData(tagsPath);
+    const data = tagsFile[oldName];
+    if (!data) return false;
+
+    const oldPath = path.join(folderPath, data.path);
+    const newPath = path.join(folderPath, newName);
+
+    // Проверяем, что файл с новым именем не существует
+    if (fs.existsSync(newPath)) {
+      console.error("Файл с таким именем уже существует");
+      return false;
+    }
+
+    // Переименовываем файл на диске
+    fs.renameSync(oldPath, newPath);
+
+    // Обновляем JSON
+    delete tagsFile[oldName];
+    tagsFile[newName] = { ...data, path: newName };
+
+    saveData(tagsPath, tagsFile)
+    return true;
+  } catch (err) {
+    console.error("Ошибка при переименовании файла:", err);
+    return false;
+  }
+}

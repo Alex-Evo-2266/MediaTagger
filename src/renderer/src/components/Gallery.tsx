@@ -1,6 +1,5 @@
-import { Button, Pagination, Card, CardMedia, CardActionArea, Box, TextField, Stack, Chip } from "@mui/material";
+import { Pagination, Card, CardMedia, CardActionArea, Box, TextField, Stack, Chip } from "@mui/material";
 import Grid from "@mui/material/Grid";
-import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import { useCallback, useEffect, useState } from "react";
 import { ImageDialog } from "./ImageDialog";
 import { Image } from "src/preload/types";
@@ -17,21 +16,16 @@ export default function Gallery() {
     window.api.loadImage({ filter: {tags:tags}, search: "" }, page).then((res) => {
       setImages(res.imgs);
       setPages(res.pages);
+      console.log(res)
     });
   }, [page, tags]);
 
   useEffect(() => {
     load();
-  }, [load]);
-
-  const handleAddImage = () => {
-    window.api.copyImage().then((res) => {
-      if (res) {
-        alert(`Изображение(я) добавлено`);
-        load();
-      }
+    window.api.onTagsUpdated((updated) => {
+      if (updated) load();
     });
-  };
+  }, [load]);
 
   // добавление тега
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>) => {
@@ -50,14 +44,6 @@ export default function Gallery() {
 
   return (
     <Box p={2} display="flex" flexDirection="column" height="100vh">
-      <Button
-        variant="contained"
-        startIcon={<AddPhotoAlternateIcon />}
-        onClick={handleAddImage}
-        sx={{ mb: 2, alignSelf: "flex-start" }}
-      >
-        Добавить изображения
-      </Button>
 
       {/* Поле для ввода тегов */}
       <Box mb={2}>
@@ -117,22 +103,42 @@ export default function Gallery() {
     </Box>
   );
 }
+const SUPPORTED_EXTENSIONS = /\.(png|jpg|jpeg|gif|bmp|mp4|avi|mov)$/i;
 
-const Content = ({ file, onClick }: { file: Image, onClick: () => void  }) => {
+const Content = ({ file, onClick }: { file: Image; onClick: () => void }) => {
   const [dataUrl, setDataUrl] = useState<string>("");
 
   useEffect(() => {
-    window.api.readFileAsBase64(file.fullPath).then(setDataUrl);
+    // Загружаем файл только если поддерживается
+    if (SUPPORTED_EXTENSIONS.test(file.fullPath)) {
+      window.api.readFileAsBase64(file.fullPath).then(setDataUrl);
+    }
   }, [file]);
 
-  if (dataUrl === "") return null;
-
+  const ext = file.fullPath.split(".").pop()?.toLowerCase() || "";
   const isVideo = /\.(mp4|avi|mov)$/i.test(file.fullPath);
+  const isImage = /\.(png|jpg|jpeg|gif|bmp)$/i.test(file.fullPath);
+  const unsupported = !isImage && !isVideo;
 
   return (
-    <Card sx={{ borderRadius: 2, overflow: "hidden", height: 200, minWidth: 300 }}>
+    <Card
+      sx={{
+        borderRadius: 2,
+        overflow: "hidden",
+        height: 200,
+        minWidth: 300,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        bgcolor: unsupported ? "grey.300" : "inherit",
+      }}
+    >
       <CardActionArea onClick={onClick}>
-        {isVideo ? (
+        {unsupported ? (
+          <Box textAlign="center" px={1}>
+            Неподдерживаемый формат: {ext}
+          </Box>
+        ) : isVideo ? (
           <CardMedia component="video" src={dataUrl} controls height="200" />
         ) : (
           <CardMedia component="img" src={dataUrl} alt="media" height="200" />

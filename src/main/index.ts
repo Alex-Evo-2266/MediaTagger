@@ -2,8 +2,9 @@ import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import { Filter, Images } from "./types";
-import { deleteImage, getImage, getImagesFromFolder, imgbase64 } from "./load_img";
+import { deleteImage, getImage, getImagesFromFolder, imgbase64, renameImageFile } from "./load_img";
 import { createTags, renameInFile, saveTags } from "./tags";
+import { syncTagsWithFiles } from "./sinhron";
 
 let mainWindow: BrowserWindow | null = null;
 const IMG_IN_PAGE = 10
@@ -57,17 +58,27 @@ function createWindow() {
       label: "File",
       submenu: [
         {
-          label: "Open Folder",
-          accelerator: "CmdOrCtrl+O",
+          label: "Добавить изображение",
+          accelerator: "CmdOrCtrl+I",
           click: async () => {
             if (!mainWindow) return;
-            const result = await dialog.showOpenDialog(mainWindow, {
-              properties: ["openDirectory"]
-            });
-            if (result.canceled || result.filePaths.length === 0) return;
-            // Можно отправить путь в renderer через ipc
-            mainWindow.webContents.send("folder-selected", result.filePaths[0]);
+
+            addImage().then(res=>{
+               if (!mainWindow) return;
+                mainWindow.webContents.send("tags-updated", res);
+            })
           }
+        },
+        {
+          label: "Синхронизировать теги",
+          click: (_menuItem) => {
+            if (!mainWindow) return;
+
+            const updated = syncTagsWithFiles(tagsPath, imagesPath);
+
+            // Отправляем событие в renderer о том, что данные обновились
+            mainWindow.webContents.send("tags-updated", updated);
+          },
         },
         { type: "separator" },
         {
@@ -99,8 +110,7 @@ function createWindow() {
 
 app.on("ready", createWindow);
 
-// обработчик для выбора файла
-ipcMain.handle("copy-image", async (_event) => {
+async function addImage(){
   const result = await dialog.showOpenDialog({
     title: "Выберите изображение",
     properties: ["openFile", "multiSelections"],
@@ -108,7 +118,7 @@ ipcMain.handle("copy-image", async (_event) => {
   });
 
   if (result.canceled || result.filePaths.length === 0) {
-    return null;
+    return false;
   }
 
   const copiedPaths: string[] = [];
@@ -125,9 +135,8 @@ ipcMain.handle("copy-image", async (_event) => {
     }
   }
 
-  return copiedPaths; // вернём путь к скопированному файлу
-});
-
+  return true; // вернём путь к скопированному файлу
+}
 
 // IPC: сохранить теги
 ipcMain.handle("save-tags", async (_, name, tags) => {
@@ -158,6 +167,9 @@ ipcMain.handle("delete-image", async (_event, name:string) => {
 });
 
 ipcMain.handle("rename-image", async (_event, oldName:string, newName: string) => {
-  await renameInFile(tagsPath, oldName, newName)
-  return true;
+  return await renameInFile(tagsPath, oldName, newName)
+});
+
+ipcMain.handle("rename-image-file", async (_event, oldName:string, newName: string) => {
+  return await renameImageFile(tagsPath, imagesPath, oldName, newName)
 });

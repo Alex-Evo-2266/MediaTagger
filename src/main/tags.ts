@@ -61,9 +61,12 @@ export function getAllTags(tagsPath: string): string[] {
 export function renameInFile(tagsPath: string, oldName:string, newName:string) {
   const tagsFile = loadData(tagsPath);
   if(newName in tagsFile){
-    throw Error("name alrady exist")
+    // throw Error("name alrady exist")
+    console.error("такой файл уже существует")
+    return false
   }
   tagsFile[newName] = {...tagsFile[oldName]}
   delete tagsFile[oldName]
   saveData(tagsPath, tagsFile)
+  return true
 }
