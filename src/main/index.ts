@@ -2,8 +2,8 @@ import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron";
 import * as fs from "fs";
 import * as path from "path";
 import { Filter, Images } from "./types";
-import { getImage, getImagesFromFolder } from "./load_img";
-import { saveTags } from "./tags";
+import { getImage, getImagesFromFolder, imgbase64 } from "./load_img";
+import { createTags, saveTags } from "./tags";
 
 let mainWindow: BrowserWindow | null = null;
 const IMG_IN_PAGE = 10
@@ -99,41 +99,6 @@ function createWindow() {
 
 app.on("ready", createWindow);
 
-// IPC: сохранить теги
-ipcMain.handle("save-tags", async (_, file, tags) => {
-  saveTags(imagesPath, tagsPath, file, tags)
-  return true;
-});
-
-// IPC: загрузить теги
-ipcMain.handle("readFileAsBase64", async (_, filePath: string) => {
-      const ext = path.extname(filePath).toLowerCase();
-      const mime =
-        ext === ".jpg" || ext === ".jpeg"
-          ? "image/jpeg"
-          : ext === ".png"
-          ? "image/png"
-          : ext === ".gif"
-          ? "image/gif"
-          : ext === ".mp4"
-          ? "video/mp4"
-          : ext === ".avi"
-          ? "video/x-msvideo"
-          : ext === ".mov"
-          ? "video/quicktime"
-          : "";
-      if (!mime) return "";
-      const buffer = fs.readFileSync(filePath);
-      const data = `data:${mime};base64,${buffer.toString("base64")}`;
-      return data;
-});
-
-
-ipcMain.handle("load-image", async (_, filters: Filter, page: number = 0):Promise<Images> => {
-  const data = await getImagesFromFolder(imagesPath, filters.search, page, IMG_IN_PAGE)
-  return {imgs: data.img, page: page + 1, next_img: page + 20, pages: data.pages, imgInPage:IMG_IN_PAGE}
-});
-
 // обработчик для выбора файла
 ipcMain.handle("copy-image", async (_event) => {
   const result = await dialog.showOpenDialog({
@@ -151,7 +116,7 @@ ipcMain.handle("copy-image", async (_event) => {
   for (const selectedFile of result.filePaths) {
     const fileName = path.basename(selectedFile);
     const destination = path.join(imagesPath, fileName);
-
+    createTags(imagesPath, tagsPath, destination, null,[])
     try {
       fs.copyFileSync(selectedFile, destination);
       copiedPaths.push(destination);
@@ -163,7 +128,26 @@ ipcMain.handle("copy-image", async (_event) => {
   return copiedPaths; // вернём путь к скопированному файлу
 });
 
-ipcMain.handle("get-image", async (_event, page:number, index: number) => {
-  const data = await getImage(imagesPath, page, index, tagsPath, IMG_IN_PAGE)
+
+// IPC: сохранить теги
+ipcMain.handle("save-tags", async (_, name, tags) => {
+  saveTags(tagsPath, name, tags)
+  return true;
+});
+
+// IPC: загрузить теги
+ipcMain.handle("readFileAsBase64", async (_, filePath: string) => {
+      return await imgbase64(filePath)
+});
+
+
+ipcMain.handle("load-image", async (_, filters: Filter, page: number = 0):Promise<Images> => {
+  const data = await getImagesFromFolder(tagsPath, imagesPath, filters, page, IMG_IN_PAGE)
+  return {imgs: data.img, page: page + 1, next_img: page + 20, pages: data.pages, imgInPage:IMG_IN_PAGE}
+});
+
+
+ipcMain.handle("get-image", async (_event, name:string) => {
+  const data = await getImage(tagsPath, imagesPath, name, IMG_IN_PAGE)
   return data
 });

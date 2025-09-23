@@ -3,16 +3,18 @@ import Grid from "@mui/material/Grid";
 import AddPhotoAlternateIcon from "@mui/icons-material/AddPhotoAlternate";
 import { useCallback, useEffect, useState } from "react";
 import { ImageDialog } from "./ImageDialog";
+import { Image } from "src/preload/types";
 
 export default function Gallery() {
   const [page, setPage] = useState<number>(0);
   const [pages, setPages] = useState<number>(1);
   const [imgInPage, setImgInPage] = useState<number>(10);
-  const [images, setImages] = useState<string[]>([]);
-    const [selected, setSelected] = useState<number | null>(null);
+  const [images, setImages] = useState<Image[]>([]);
+    const [selected, setSelected] = useState<string | null>(null);
 
   const load = useCallback(() => {
-    window.api.loadImage({ filter: "", search: "" }, page).then((res) => {
+    window.api.loadImage({ filter: {tags:[]}, search: "" }, page).then((res) => {
+        console.log(res)
       setImages(res.imgs);
       setPages(res.pages);
       setImgInPage(res.imgInPage)
@@ -46,9 +48,9 @@ export default function Gallery() {
       {/* Прокручиваемая область */}
       <Box flex={1} overflow="auto" pr={1}>
         <Grid container spacing={2}>
-          {images.map((file, index) => (
-            <Grid size={{xs: 6, sm: 4, md: 3, lg: 2}} key={file}>
-              <Content file={file} onClick={() => setSelected(index)} />
+          {images.map((file) => (
+            <Grid size={{xs: 6, sm: 4, md: 3, lg: 2}} key={file.name}>
+              <Content file={file} onClick={() => setSelected(file.name)} />
             </Grid>
           ))}
         </Grid>
@@ -68,7 +70,7 @@ export default function Gallery() {
       {
         selected !== null &&
         <ImageDialog
-            selectedIndex={selected ?? 0}
+            name={selected}
             open={selected !== null}
             onClose={() => setSelected(null)}
             page={page}
@@ -81,16 +83,16 @@ export default function Gallery() {
   );
 }
 
-const Content = ({ file, onClick }: { file: string, onClick: () => void  }) => {
+const Content = ({ file, onClick }: { file: Image, onClick: () => void  }) => {
   const [dataUrl, setDataUrl] = useState<string>("");
 
   useEffect(() => {
-    window.api.readFileAsBase64(file).then(setDataUrl);
+    window.api.readFileAsBase64(file.fullPath).then(setDataUrl);
   }, [file]);
 
   if (dataUrl === "") return null;
 
-  const isVideo = /\.(mp4|avi|mov)$/i.test(file);
+  const isVideo = /\.(mp4|avi|mov)$/i.test(file.fullPath);
 
   return (
     <Card sx={{ borderRadius: 2, overflow: "hidden", height: 200 }}>

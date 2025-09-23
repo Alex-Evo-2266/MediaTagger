@@ -1,14 +1,15 @@
 import * as fs from "fs";
 import * as path from "path";
+import { TagsFileType } from "./types";
 
-function getFileInTagsFile(baseDir: string, file: string)
+export function getFileInTagsFile(baseDir: string, file: string)
 {
   const fileName = path.relative(baseDir, file);
   return fileName
 }
 
 // Загрузка JSON
-function loadData(jsonPath: string) {
+export function loadData(jsonPath: string):TagsFileType {
   if (!fs.existsSync(jsonPath)) return {};
   const raw = fs.readFileSync(jsonPath, "utf-8");
   return JSON.parse(raw);
@@ -27,10 +28,22 @@ export function getTags(baseDir: string, jsonPath: string, filePath: string): st
 }
 
 // Сохранение тегов для файла
-export function saveTags(baseDir: string, jsonPath: string, filePath: string, tags: string[]) {
+export function saveTags(jsonPath: string, name: string, tags: string[]) {
+  const data = loadData(jsonPath);
+  if (!data[name]) return;
+  data[name].tags = tags;
+  saveData(jsonPath, data);
+}
+
+// Сохранение тегов для файла
+export function createTags(baseDir: string, jsonPath: string, filePath: string, name: string | null, tags: string[]) {
   const data = loadData(jsonPath);
   const fileName = getFileInTagsFile(baseDir, filePath)
-  if (!data[fileName]) data[fileName] = {};
-  data[fileName].tags = tags;
+  if(name === null) name = fileName
+  if (!data[name]) data[name] = {
+    tags: [],
+    path: fileName
+  };
+  data[name].tags = tags;
   saveData(jsonPath, data);
 }

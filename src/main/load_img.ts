@@ -1,7 +1,8 @@
 import * as fs from "fs";
 import * as path from "path";
-import { Image } from "../preload/types";
-import { getTags } from "./tags";
+import { Image, Image64 } from "../preload/types";
+import { getTags, loadData } from "./tags";
+import { Filter } from "./types";
 
 const SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".bmp"];
 
@@ -28,26 +29,34 @@ export async function imgbase64(filePath:string) {
 }
 
 export async function getImagesFromFolder(
+  tagsPath: string,
   folderPath: string,
-  search: string = "",
+  filter: Filter | undefined,
   page: number = 0,
   pageSize: number = 10
 ) {
   try {
-    const files = await fs.promises.readdir(folderPath);
-    const pagesAll = Math.floor(files.length / pageSize) 
-    
-    // Фильтруем изображения и по названию
-    const images = files.filter((file) => {
-      const ext = path.extname(file).toLowerCase();
-      return SUPPORTED_EXTENSIONS.includes(ext) && file.toLowerCase().includes(search.toLowerCase());
-    });
-
-    // Разбиваем на порции
+    const tagsFile = loadData(tagsPath)
+    const items = Object.entries(tagsFile)
+    console.log("filter ", filter)
     const start = page * pageSize;
-    const pagedImages = images.slice(start, start + pageSize);
 
-    return {img:pagedImages.map((file) => path.join(folderPath, file)), pages:pagesAll}
+    const filtred: Image[] = items.filter(([name, option])=>{
+      const containsAll = filter === undefined?true: filter.filter.tags.every(el =>
+        option.tags.some(item => item.toLowerCase() === el.toLowerCase())
+      );
+      return filter === undefined || (name.toLowerCase().includes(filter.search.toLowerCase()) && containsAll)
+    }).map(([name, option])=>({
+      name,
+      tags: option.tags,
+      path: option.path,
+      fullPath: path.join(folderPath, option.path)
+    }))
+
+    const allPages = Math.ceil(filtred.length / pageSize) 
+    const sliceImage = filtred.slice(start, start + pageSize)
+
+    return {img:sliceImage, pages:allPages}
   } catch (err) {
     console.error("Ошибка при чтении папки:", err);
     return {img:[], pages:1};
@@ -56,24 +65,22 @@ export async function getImagesFromFolder(
 
 
 export async function getImage(
-  folderPath: string,
-  page: number,
-  index: number,
   tagsPath: string,
+  folderPath: string,
+  name: string,
   pageSize: number = 10
-):Promise<Image | null> {
+):Promise<Image64 | null> {
   try {
-    const files = await fs.promises.readdir(folderPath);
-    console.log(page, pageSize, page * pageSize, index, (page * pageSize) + index)
-    const globalIndex = (page * pageSize) + index
+    const tagsFile = loadData(tagsPath)
+    const data = tagsFile[name]
     
-    const image = files[globalIndex]
+    const image = data.path
     console.log(image)
     const imgPath = path.join(folderPath, image)
     const tags = getTags(folderPath, tagsPath, imgPath)
-    return {img: imgPath, base64: await imgbase64(imgPath), tags:tags}
+    return {path: image, fullPath: imgPath, base64: await imgbase64(imgPath), tags:tags, name}
   } catch (err) {
-    console.error("Ошибка при чтении папки:", err);
+    console.error("Ошибка при чтении папки 2:", err);
     return null
   }
 }

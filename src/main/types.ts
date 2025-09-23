@@ -7,13 +7,37 @@ export type MediaFile = {
 
 export type Filter = {
   search: string
-  filter: string
+  filter: {
+    tags: string[]
+  }
 };
 
+export type Image = {
+  path: string
+  fullPath: string
+  name: string
+  tags: string[]
+  next?: string
+  prev?: string
+}
+
+
+export type Image64 = {
+  img: string
+  name: string
+  base64: string
+  tags: string[]
+}
+
 export type Images = {
-  imgs: string[]
+  imgs: Image[]
   page: number,
   next_img: number | null
   pages: number
   imgInPage: number
 }
+
+export type TagsFileType = Record<string, {
+  tags: string[],
+  path: string,
+}>
