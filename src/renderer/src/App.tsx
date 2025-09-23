@@ -1,17 +1,17 @@
 
 import Gallery from "./components/Gallery";
-import { createTheme, ThemeProvider, CssBaseline } from "@mui/material";
+import { createTheme, ThemeProvider } from "@mui/material";
 
 const darkTheme = createTheme({
   palette: {
-    mode: "dark", // 🌙 включает тёмный режим
+    mode: "dark",
     background: {
-      default: "#000000", // фон страницы
-      paper: "#121212",   // фон карточек
+      default: "#000000", 
+      paper: "#121212",  
     },
     text: {
-      primary: "#ffffff", // основной текст
-      secondary: "#aaaaaa", // второстепенный
+      primary: "#ffffff", 
+      secondary: "#aaaaaa", 
     },
   },
 });
@@ -21,7 +21,6 @@ function App() {
 
   return (
     <ThemeProvider theme={darkTheme}>
-      {/* <CssBaseline />  */}
       <Gallery/>
     </ThemeProvider>
   );
