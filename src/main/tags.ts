@@ -28,10 +28,11 @@ export function getTags(baseDir: string, jsonPath: string, filePath: string): st
 }
 
 // Сохранение тегов для файла
-export function saveTags(jsonPath: string, name: string, tags: string[]): void {
+export function saveTags(jsonPath: string, name: string, tags: string[], order?: string): void {
   const data = loadData(jsonPath)
   if (!data[name]) return
   data[name].tags = tags
+  data[name].order = order
   saveData(jsonPath, data)
 }
 

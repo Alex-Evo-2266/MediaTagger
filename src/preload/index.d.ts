@@ -7,7 +7,7 @@ interface API {
   loadImage: (filter: Filter, page?: number) => Promise<Images>
   loadImageNoTag: (page?: number) => Promise<Images>
   getImage: (name: string, filter?: Filter) => Promise<Image | null>
-  saveTags: (name: string, tags: string[]) => Promise<void>
+  saveTags: (name: string, tags: string[], order?: string) => Promise<void>
   deleteImg: (name: string) => Promise<void>
   renameImg: (oldName: string, newName: string) => Promise<void>
   renameImgFile: (oldName: string, newName: string) => Promise<boolean>

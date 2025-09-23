@@ -178,8 +178,8 @@ async function addImage(): Promise<boolean> {
 }
 
 // IPC: сохранить теги
-ipcMain.handle('save-tags', async (_, name, tags) => {
-  saveTags(tagsPath, name, tags)
+ipcMain.handle('save-tags', async (_, name, tags, order) => {
+  saveTags(tagsPath, name, tags, order)
   return true
 })
 

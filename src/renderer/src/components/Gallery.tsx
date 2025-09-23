@@ -70,6 +70,8 @@ export default function Gallery(): JSX.Element {
             <Chip key={tag} label={tag} onDelete={() => handleDeleteTag(tag)} color="primary" />
           ))}
         </Stack>
+      </Box>
+      <Box mb={2}>
         <TextField
           label="Поиск"
           variant="outlined"

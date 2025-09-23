@@ -28,6 +28,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [editing, setEditing] = useState(false)
+  const [order, setOrder] = useState<string | null>(null)
   const [file, setFile] = useState<Image64 | null>(null)
 
   // Для диалога переименования
@@ -36,7 +37,9 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
 
   const load = useCallback(() => {
     window.api.getImage(currentImgName, filter).then((res: Image64 | null) => {
+      console.log(res)
       setFile(res)
+      setOrder(res?.order ?? null)
       setTags(res?.tags ?? [])
       setRenameInput(res?.name ?? '')
     })
@@ -67,7 +70,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
 
   const handleSave = (): void => {
     if (file) {
-      window.api.saveTags(file.name, tags).then(() => {
+      window.api.saveTags(file.name, tags, order ?? undefined).then(() => {
         alert('Теги сохранены')
         setEditing(false)
         reload()
@@ -177,6 +180,17 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
               <Button variant="contained" onClick={handleAddTag}>
                 Добавить
               </Button>
+            </Box>
+          )}
+
+          {editing && (
+            <Box display="flex" gap={1} mb={2}>
+              <TextField
+                fullWidth
+                label="поле для сортировки"
+                value={order ?? ""}
+                onChange={(e) => setOrder(e.target.value)}
+              />
             </Box>
           )}
 

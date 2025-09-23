@@ -61,11 +61,19 @@ export async function getImagesFromFolder(
         name,
         tags: option.tags,
         path: option.path,
+        order: option.order,
         fullPath: path.join(folderPath, option.path)
       }))
 
+
+    const sorter = (filter && filter.filter.tags.length > 0)? filtred.sort((a, b)=>{
+      const orderA = a.order ?? ""; // значение по умолчанию пустая строка
+      const orderB = b.order ?? "";
+      return orderA.localeCompare(orderB); // сравниваем строки
+    }): filtred
+
     const allPages = Math.ceil(filtred.length / pageSize)
-    const sliceImage = filtred.slice(start, start + pageSize)
+    const sliceImage = sorter.slice(start, start + pageSize)
 
     return { img: sliceImage, pages: allPages }
   } catch (err) {
@@ -134,26 +142,34 @@ export async function getImage(
         name,
         tags: option.tags,
         path: option.path,
+        order: option.order,
         fullPath: path.join(folderPath, option.path)
       }))
 
-    const data = filtred.find((item) => item.name === name)
+    const sorter = (filter && filter.filter.tags.length > 0)? filtred.sort((a, b)=>{
+      const orderA = a.order ?? ""; // значение по умолчанию пустая строка
+      const orderB = b.order ?? "";
+      return orderA.localeCompare(orderB); // сравниваем строки
+    }): filtred
+
+    const data = sorter.find((item) => item.name === name)
     if (!data) return null
     const image = data.path
     const imgPath = data.fullPath
     const tags = getTags(folderPath, tagsPath, imgPath)
 
     // Получаем список всех имён
-    const index = filtred.indexOf(data)
+    const index = sorter.indexOf(data)
 
     // Определяем prev/next
-    const prev = index > 0 ? filtred[index - 1].name : undefined
-    const next = index < filtred.length - 1 ? filtred[index + 1].name : undefined
+    const prev = index > 0 ? sorter[index - 1].name : undefined
+    const next = index < sorter.length - 1 ? sorter[index + 1].name : undefined
 
     return {
       path: image,
       fullPath: imgPath,
       base64: await imgbase64(imgPath),
+      order: data.order,
       tags,
       name,
       prev,

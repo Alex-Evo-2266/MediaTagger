@@ -8,6 +8,7 @@ export type Filter = {
   search: string
   filter: {
     tags: string[]
+    order?: string
   }
 }
 
@@ -17,6 +18,7 @@ export type Image = {
   name: string
   tags: string[]
   next?: string
+  order?: string
   prev?: string
 }
 
@@ -25,6 +27,7 @@ export type Image64 = {
   name: string
   base64: string
   tags: string[]
+  order?: string
   next?: string
   prev?: string
 }
@@ -40,6 +43,7 @@ export type Images = {
 export type TagData = {
   tags: string[]
   path: string
+  order?: string
 }
 
 export type TagsFileType = Record<string, TagData>

@@ -7,7 +7,8 @@ export type MediaFile = {
 export type Filter = {
   search: string
   filter: {
-    tags: string[]
+    tags: string[],
+    order?: string
   }
 }
 
@@ -17,12 +18,14 @@ export type Image = {
   name: string
   tags: string[]
   next?: string
+  order?: string
   prev?: string
 }
 
 export type Image64 = {
   path: string
   fullPath: string
+  order?: string
   name: string
   base64: string
   tags: string[]
