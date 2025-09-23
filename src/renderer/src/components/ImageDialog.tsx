@@ -1,3 +1,6 @@
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew'
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
+import DeleteIcon from '@mui/icons-material/Delete'
 import {
   Dialog,
   DialogContent,
@@ -8,120 +11,114 @@ import {
   Stack,
   Chip,
   IconButton,
-  DialogContentText,
-} from "@mui/material";
-import ArrowBackIosNewIcon from "@mui/icons-material/ArrowBackIosNew";
-import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
-import DeleteIcon from "@mui/icons-material/Delete";
-import { useState, useEffect, useCallback } from "react";
-import { Filter, Image64 } from "src/preload/types";
+  DialogContentText
+} from '@mui/material'
+import { useState, useEffect, useCallback } from 'react'
+import { Filter, Image64 } from 'src/preload/types'
 
-export const ImageDialog = ({
-  name,
-  onClose,
-  filter,
-  reload,
-}: {
-  name: string;
-  onClose: () => void;
-  filter: Filter;
-  reload: () => void;
-}) => {
-  const [currentImgName, setCurrentImgName] = useState(name);
-  const [tags, setTags] = useState<string[]>([]);
-  const [tagInput, setTagInput] = useState("");
-  const [editing, setEditing] = useState(false);
-  const [file, setFile] = useState<Image64 | null>(null);
+interface IImageDialog {
+  name: string
+  onClose: () => void
+  filter: Filter
+  reload: () => void
+}
+
+export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, reload }) => {
+  const [currentImgName, setCurrentImgName] = useState(name)
+  const [tags, setTags] = useState<string[]>([])
+  const [tagInput, setTagInput] = useState('')
+  const [editing, setEditing] = useState(false)
+  const [file, setFile] = useState<Image64 | null>(null)
 
   // Для диалога переименования
-  const [renameDialogOpen, setRenameDialogOpen] = useState(false);
-  const [renameInput, setRenameInput] = useState("");
+  const [renameDialogOpen, setRenameDialogOpen] = useState(false)
+  const [renameInput, setRenameInput] = useState('')
 
   const load = useCallback(() => {
     window.api.getImage(currentImgName, filter).then((res: Image64 | null) => {
-      setFile(res);
-      setTags(res?.tags ?? []);
-      setRenameInput(res?.name ?? "");
-    });
-  }, [currentImgName, filter]);
+      setFile(res)
+      setTags(res?.tags ?? [])
+      setRenameInput(res?.name ?? '')
+    })
+  }, [currentImgName, filter])
 
   useEffect(() => {
-    load();
-  }, [load]);
+    load()
+  }, [load])
 
-  const handlePrev = () => {
-    if (file?.prev) setCurrentImgName(file.prev);
-  };
+  const handlePrev = (): void => {
+    if (file?.prev) setCurrentImgName(file.prev)
+  }
 
-  const handleNext = () => {
-    if (file?.next) setCurrentImgName(file.next);
-  };
+  const handleNext = (): void => {
+    if (file?.next) setCurrentImgName(file.next)
+  }
 
-  const handleAddTag = () => {
-    if (tagInput.trim() !== "" && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
+  const handleAddTag = (): void => {
+    if (tagInput.trim() !== '' && !tags.includes(tagInput.trim())) {
+      setTags([...tags, tagInput.trim()])
+      setTagInput('')
     }
-  };
+  }
 
-  const handleDeleteTag = (tagToDelete: string) => {
-    setTags(tags.filter((t) => t !== tagToDelete));
-  };
+  const handleDeleteTag = (tagToDelete: string): void => {
+    setTags(tags.filter((t) => t !== tagToDelete))
+  }
 
-  const handleSave = () => {
+  const handleSave = (): void => {
     if (file) {
       window.api.saveTags(file.name, tags).then(() => {
-        alert("Теги сохранены");
-        setEditing(false);
-        reload();
-      });
+        alert('Теги сохранены')
+        setEditing(false)
+        reload()
+      })
     }
-  };
+  }
 
-  const handleDeleteImage = () => {
+  const handleDeleteImage = (): void => {
     if (file) {
-      if (confirm("Удалить изображение безвозвратно?")) {
+      if (confirm('Удалить изображение безвозвратно?')) {
         window.api.deleteImg(file.name).then(() => {
-          alert("Изображение удалено");
-          reload();
+          alert('Изображение удалено')
+          reload()
           if (file.next) {
-            setCurrentImgName(file.next);
+            setCurrentImgName(file.next)
           } else if (file.prev) {
-            setCurrentImgName(file.prev);
+            setCurrentImgName(file.prev)
           } else {
-            onClose();
+            onClose()
           }
-        });
+        })
       }
     }
-  };
+  }
 
-  const handleRenameDisplay = () => {
-    if (file && renameInput.trim() !== "") {
+  const handleRenameDisplay = (): void => {
+    if (file && renameInput.trim() !== '') {
       window.api.renameImg(file.name, renameInput.trim()).then(() => {
-        alert("Имя обновлено (только отображаемое)");
-        setRenameDialogOpen(false);
-        load();
-        reload();
-      });
+        alert('Имя обновлено (только отображаемое)')
+        setRenameDialogOpen(false)
+        load()
+        reload()
+      })
     }
-  };
+  }
 
-  const handleRenameFile = () => {
-    if (file && renameInput.trim() !== "" && renameInput.trim() !== file.name) {
+  const handleRenameFile = (): void => {
+    if (file && renameInput.trim() !== '' && renameInput.trim() !== file.name) {
       window.api.renameImgFile(file.name, renameInput.trim()).then((success: boolean) => {
         if (success) {
-          alert("Файл переименован");
-          setCurrentImgName(renameInput.trim());
-          setRenameDialogOpen(false);
-          load();
-          reload();
+          alert('Файл переименован')
+          setCurrentImgName(renameInput.trim())
+          setRenameDialogOpen(false)
+          load()
+          reload()
         } else {
-          alert("Ошибка при переименовании файла");
+          alert('Ошибка при переименовании файла')
         }
-      });
+      })
     }
-  };
+  }
 
   return (
     <>
@@ -134,7 +131,13 @@ export const ImageDialog = ({
             </IconButton>
 
             {file && (
-              <Box component="img" src={file.base64} alt="preview" maxHeight="60vh" maxWidth="80%" />
+              <Box
+                component="img"
+                src={file.base64}
+                alt="preview"
+                maxHeight="60vh"
+                maxWidth="80%"
+              />
             )}
 
             <IconButton onClick={handleNext} disabled={!file?.next}>
@@ -165,9 +168,9 @@ export const ImageDialog = ({
                 value={tagInput}
                 onChange={(e) => setTagInput(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    e.preventDefault();
-                    handleAddTag();
+                  if (e.key === 'Enter') {
+                    e.preventDefault()
+                    handleAddTag()
                   }
                 }}
               />
@@ -235,5 +238,5 @@ export const ImageDialog = ({
         </DialogContent>
       </Dialog>
     </>
-  );
-};
+  )
+}

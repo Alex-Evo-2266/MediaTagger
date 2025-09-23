@@ -1,31 +1,32 @@
-import * as fs from "fs";
-import * as path from "path";
-import { Image, Image64 } from "../preload/types";
-import { getTags, loadData, saveData } from "./tags";
-import { Filter } from "./types";
+import * as fs from 'fs'
+import * as path from 'path'
+
+import { getTags, loadData, saveData } from './tags'
+import { Filter } from './types'
+import { Image, Image64 } from '../preload/types'
 
 // const SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".bmp"];
 
-export async function imgbase64(filePath:string) {
-  const ext = path.extname(filePath).toLowerCase();
-        const mime =
-          ext === ".jpg" || ext === ".jpeg"
-            ? "image/jpeg"
-            : ext === ".png"
-            ? "image/png"
-            : ext === ".gif"
-            ? "image/gif"
-            : ext === ".mp4"
-            ? "video/mp4"
-            : ext === ".avi"
-            ? "video/x-msvideo"
-            : ext === ".mov"
-            ? "video/quicktime"
-            : "";
-        if (!mime) return "";
-        const buffer = fs.readFileSync(filePath);
-        const data = `data:${mime};base64,${buffer.toString("base64")}`;
-        return data;
+export async function imgbase64(filePath: string): Promise<string> {
+  const ext = path.extname(filePath).toLowerCase()
+  const mime =
+    ext === '.jpg' || ext === '.jpeg'
+      ? 'image/jpeg'
+      : ext === '.png'
+        ? 'image/png'
+        : ext === '.gif'
+          ? 'image/gif'
+          : ext === '.mp4'
+            ? 'video/mp4'
+            : ext === '.avi'
+              ? 'video/x-msvideo'
+              : ext === '.mov'
+                ? 'video/quicktime'
+                : ''
+  if (!mime) return ''
+  const buffer = fs.readFileSync(filePath)
+  const data = `data:${mime};base64,${buffer.toString('base64')}`
+  return data
 }
 
 export async function getImagesFromFolder(
@@ -34,31 +35,42 @@ export async function getImagesFromFolder(
   filter: Filter | undefined,
   page: number = 0,
   pageSize: number = 10
-) {
+): Promise<{
+  img: Image[]
+  pages: number
+}> {
   try {
     const tagsFile = loadData(tagsPath)
     const items = Object.entries(tagsFile)
-    const start = page * pageSize;
+    const start = page * pageSize
 
-    const filtred: Image[] = items.filter(([name, option])=>{
-      const containsAll = filter === undefined?true: filter.filter.tags.every(el =>
-        option.tags.some(item => item.toLowerCase() === el.toLowerCase())
-      );
-      return filter === undefined || (name.toLowerCase().includes(filter.search.toLowerCase()) && containsAll)
-    }).map(([name, option])=>({
-      name,
-      tags: option.tags,
-      path: option.path,
-      fullPath: path.join(folderPath, option.path)
-    }))
+    const filtred: Image[] = items
+      .filter(([name, option]) => {
+        const containsAll =
+          filter === undefined
+            ? true
+            : filter.filter.tags.every((el) =>
+                option.tags.some((item) => item.toLowerCase() === el.toLowerCase())
+              )
+        return (
+          filter === undefined ||
+          (name.toLowerCase().includes(filter.search.toLowerCase()) && containsAll)
+        )
+      })
+      .map(([name, option]) => ({
+        name,
+        tags: option.tags,
+        path: option.path,
+        fullPath: path.join(folderPath, option.path)
+      }))
 
-    const allPages = Math.ceil(filtred.length / pageSize) 
+    const allPages = Math.ceil(filtred.length / pageSize)
     const sliceImage = filtred.slice(start, start + pageSize)
 
-    return {img:sliceImage, pages:allPages}
+    return { img: sliceImage, pages: allPages }
   } catch (err) {
-    console.error("Ошибка при чтении папки:", err);
-    return {img:[], pages:1};
+    console.error('Ошибка при чтении папки:', err)
+    return { img: [], pages: 1 }
   }
 }
 
@@ -67,28 +79,31 @@ export async function getImagesFromFolderNotTag(
   folderPath: string,
   page: number = 0,
   pageSize: number = 10
-) {
+): Promise<{
+  img: Image[]
+  pages: number
+}> {
   try {
     const tagsFile = loadData(tagsPath)
     const items = Object.entries(tagsFile)
-    const start = page * pageSize;
+    const start = page * pageSize
 
     const filtred: Image[] = items
-    .filter(([_, option])=>option.tags.length === 0)
-    .map(([name, option])=>({
-      name,
-      tags: option.tags,
-      path: option.path,
-      fullPath: path.join(folderPath, option.path)
-    }))
+      .filter(([_, option]) => option.tags.length === 0)
+      .map(([name, option]) => ({
+        name,
+        tags: option.tags,
+        path: option.path,
+        fullPath: path.join(folderPath, option.path)
+      }))
 
-    const allPages = Math.ceil(filtred.length / pageSize) 
+    const allPages = Math.ceil(filtred.length / pageSize)
     const sliceImage = filtred.slice(start, start + pageSize)
 
-    return {img:sliceImage, pages:allPages}
+    return { img: sliceImage, pages: allPages }
   } catch (err) {
-    console.error("Ошибка при чтении папки:", err);
-    return {img:[], pages:1};
+    console.error('Ошибка при чтении папки:', err)
+    return { img: [], pages: 1 }
   }
 }
 
@@ -102,24 +117,31 @@ export async function getImage(
     const tagsFile = loadData(tagsPath)
     const items = Object.entries(tagsFile)
 
-    const filtred: Image[] = items.filter(([name, option])=>{
-      const containsAll = filter === undefined?true: filter.filter.tags.every(el =>
-        option.tags.some(item => item.toLowerCase() === el.toLowerCase())
-      );
-      return filter === undefined || (name.toLowerCase().includes(filter.search.toLowerCase()) && containsAll)
-    }).map(([name, option])=>({
-      name,
-      tags: option.tags,
-      path: option.path,
-      fullPath: path.join(folderPath, option.path)
-    }))
+    const filtred: Image[] = items
+      .filter(([name, option]) => {
+        const containsAll =
+          filter === undefined
+            ? true
+            : filter.filter.tags.every((el) =>
+                option.tags.some((item) => item.toLowerCase() === el.toLowerCase())
+              )
+        return (
+          filter === undefined ||
+          (name.toLowerCase().includes(filter.search.toLowerCase()) && containsAll)
+        )
+      })
+      .map(([name, option]) => ({
+        name,
+        tags: option.tags,
+        path: option.path,
+        fullPath: path.join(folderPath, option.path)
+      }))
 
-    const data = filtred.find(item=>item.name === name)
+    const data = filtred.find((item) => item.name === name)
     if (!data) return null
     const image = data.path
     const imgPath = data.fullPath
     const tags = getTags(folderPath, tagsPath, imgPath)
-
 
     // Получаем список всех имён
     const index = filtred.indexOf(data)
@@ -138,33 +160,37 @@ export async function getImage(
       next
     }
   } catch (err) {
-    console.error("Ошибка при чтении папки 2:", err);
+    console.error('Ошибка при чтении папки 2:', err)
     return null
   }
 }
 
 // Удаление изображения
-export async function deleteImage(tagsPath: string, folderPath: string, name: string): Promise<boolean> {
+export async function deleteImage(
+  tagsPath: string,
+  folderPath: string,
+  name: string
+): Promise<boolean> {
   try {
-    const tagsFile = loadData(tagsPath);
-    const data = tagsFile[name];
-    if (!data) return false;
+    const tagsFile = loadData(tagsPath)
+    const data = tagsFile[name]
+    if (!data) return false
 
-    const imgPath = path.join(folderPath, data.path);
+    const imgPath = path.join(folderPath, data.path)
 
     // Удаляем сам файл, если он существует
     if (fs.existsSync(imgPath)) {
-      fs.unlinkSync(imgPath);
+      fs.unlinkSync(imgPath)
     }
 
     // Удаляем запись из JSON
-    delete tagsFile[name];
+    delete tagsFile[name]
     saveData(tagsPath, tagsFile)
 
-    return true;
+    return true
   } catch (err) {
-    console.error("Ошибка при удалении изображения:", err);
-    return false;
+    console.error('Ошибка при удалении изображения:', err)
+    return false
   }
 }
 
@@ -183,30 +209,30 @@ export async function renameImageFile(
   newName: string
 ): Promise<boolean> {
   try {
-    const tagsFile = loadData(tagsPath);
-    const data = tagsFile[oldName];
-    if (!data) return false;
+    const tagsFile = loadData(tagsPath)
+    const data = tagsFile[oldName]
+    if (!data) return false
 
-    const oldPath = path.join(folderPath, data.path);
-    const newPath = path.join(folderPath, newName);
+    const oldPath = path.join(folderPath, data.path)
+    const newPath = path.join(folderPath, newName)
 
     // Проверяем, что файл с новым именем не существует
     if (fs.existsSync(newPath)) {
-      console.error("Файл с таким именем уже существует");
-      return false;
+      console.error('Файл с таким именем уже существует')
+      return false
     }
 
     // Переименовываем файл на диске
-    fs.renameSync(oldPath, newPath);
+    fs.renameSync(oldPath, newPath)
 
     // Обновляем JSON
-    delete tagsFile[oldName];
-    tagsFile[newName] = { ...data, path: newName };
+    delete tagsFile[oldName]
+    tagsFile[newName] = { ...data, path: newName }
 
     saveData(tagsPath, tagsFile)
-    return true;
+    return true
   } catch (err) {
-    console.error("Ошибка при переименовании файла:", err);
-    return false;
+    console.error('Ошибка при переименовании файла:', err)
+    return false
   }
 }

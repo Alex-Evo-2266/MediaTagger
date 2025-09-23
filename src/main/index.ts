@@ -1,38 +1,47 @@
-import { app, BrowserWindow, dialog, ipcMain, Menu } from "electron";
-import * as fs from "fs";
-import * as path from "path";
-import { Filter, Images } from "./types";
-import { deleteImage, getImage, getImagesFromFolder, getImagesFromFolderNotTag, imgbase64, renameImageFile } from "./load_img";
-import { createTags, renameInFile, saveTags } from "./tags";
-import { syncTagsWithFiles } from "./sinhron";
+import * as fs from 'fs'
+import * as path from 'path'
 
-let mainWindow: BrowserWindow | null = null;
+import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron'
+
+import {
+  deleteImage,
+  getImage,
+  getImagesFromFolder,
+  getImagesFromFolderNotTag,
+  imgbase64,
+  renameImageFile
+} from './load_img'
+import { syncTagsWithFiles } from './sinhron'
+import { createTags, renameInFile, saveTags } from './tags'
+import { Filter, Images } from './types'
+
+let mainWindow: BrowserWindow | null = null
 const IMG_IN_PAGE = 10
 
-const userDataPath = app.getAppPath(); // путь к папке, где лежит исполняемый файл
+const userDataPath = app.getAppPath() // путь к папке, где лежит исполняемый файл
 
-console.log("путь", userDataPath)
+console.log('путь', userDataPath)
 
-const configPath = path.join(userDataPath, "config.json");
-const tagsPath = path.join(userDataPath, "tags.json");
-const imagesPath = path.join(userDataPath, "images");
+const configPath = path.join(userDataPath, 'config.json')
+const tagsPath = path.join(userDataPath, 'tags.json')
+const imagesPath = path.join(userDataPath, 'images')
 
-function createFile(filePath:string){
+function createFile(filePath: string): void {
   // Проверяем, есть ли файл
   if (!fs.existsSync(filePath)) {
-    fs.writeFileSync(filePath, JSON.stringify({}), "utf-8"); // создаём пустой JSON
-    console.log("Файл создан");
+    fs.writeFileSync(filePath, JSON.stringify({}), 'utf-8') // создаём пустой JSON
+    console.log('Файл создан')
   } else {
-    console.log("Файл уже существует");
+    console.log('Файл уже существует')
   }
 }
 
-function createDir(dirPath:string){
+function createDir(dirPath: string): void {
   if (!fs.existsSync(dirPath)) {
-    fs.mkdirSync(dirPath, { recursive: true });
-    console.log("Папка создана");
+    fs.mkdirSync(dirPath, { recursive: true })
+    console.log('Папка создана')
   } else {
-    console.log("Папка уже существует");
+    console.log('Папка уже существует')
   }
 }
 
@@ -40,150 +49,158 @@ createDir(imagesPath)
 createFile(configPath)
 createFile(tagsPath)
 
-function createWindow() {
+function createWindow(): void {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
     webPreferences: {
-      preload: path.join(__dirname, "../preload/index.js"),
+      preload: path.join(__dirname, '../preload/index.js'),
       webSecurity: false,
       contextIsolation: true,
-      nodeIntegration: false,
+      nodeIntegration: false
     }
-  });
+  })
 
   // Создаём меню
   const menu = Menu.buildFromTemplate([
     {
-      label: "Основное",
+      label: 'Основное',
       submenu: [
         {
-          label: "Добавить изображение",
-          accelerator: "CmdOrCtrl+I",
+          label: 'Добавить изображение',
+          accelerator: 'CmdOrCtrl+I',
           click: async () => {
-            if (!mainWindow) return;
+            if (!mainWindow) return
 
-            addImage().then(res=>{
-               if (!mainWindow) return;
-                mainWindow.webContents.send("tags-updated", res);
+            addImage().then((res) => {
+              if (!mainWindow) return
+              mainWindow.webContents.send('tags-updated', res)
             })
           }
         },
         {
-          label: "Синхронизировать изображения",
+          label: 'Синхронизировать изображения',
           click: (_menuItem) => {
-            if (!mainWindow) return;
+            if (!mainWindow) return
 
-            const updated = syncTagsWithFiles(tagsPath, imagesPath);
+            const updated = syncTagsWithFiles(tagsPath, imagesPath)
 
             // Отправляем событие в renderer о том, что данные обновились
-            mainWindow.webContents.send("tags-updated", updated);
-          },
+            mainWindow.webContents.send('tags-updated', updated)
+          }
         },
-        { type: "separator" },
+        { type: 'separator' },
         {
-          label: "Exit",
-          role: "quit"
+          label: 'Exit',
+          role: 'quit'
         }
       ]
     },
     {
-      label: "View",
+      label: 'View',
       submenu: [
         {
-          label: "Toggle DevTools",
-          accelerator: "CmdOrCtrl+Shift+I",
+          label: 'Toggle DevTools',
+          accelerator: 'CmdOrCtrl+Shift+I',
           click: () => mainWindow?.webContents.toggleDevTools()
         },
         {
-          label: "Посказать изображения без тегов",
-          type: "checkbox",
+          label: 'Посказать изображения без тегов',
+          type: 'checkbox',
           checked: false,
           click: (menuItem) => {
-            if (!mainWindow) return;
-            mainWindow.webContents.send("toggle-no-tag-images", menuItem.checked);
+            if (!mainWindow) return
+            mainWindow.webContents.send('toggle-no-tag-images', menuItem.checked)
           }
         }
       ]
     }
-  ]);
+  ])
 
-  Menu.setApplicationMenu(menu);
+  Menu.setApplicationMenu(menu)
 
-  mainWindow.webContents.openDevTools();
+  mainWindow.webContents.openDevTools()
 
-  mainWindow.loadURL("http://localhost:5173"); // Vite dev server
+  mainWindow.loadURL('http://localhost:5173') // Vite dev server
 }
 
+app.on('ready', createWindow)
 
-
-app.on("ready", createWindow);
-
-async function addImage(){
+async function addImage(): Promise<boolean> {
   const result = await dialog.showOpenDialog({
-    title: "Выберите изображение",
-    properties: ["openFile", "multiSelections"],
-    filters: [{ name: "Images", extensions: ["jpg", "jpeg", "png", "gif"] }],
-  });
+    title: 'Выберите изображение',
+    properties: ['openFile', 'multiSelections'],
+    filters: [{ name: 'Images', extensions: ['jpg', 'jpeg', 'png', 'gif'] }]
+  })
 
   if (result.canceled || result.filePaths.length === 0) {
-    return false;
+    return false
   }
 
-  const copiedPaths: string[] = [];
-  
+  const copiedPaths: string[] = []
+
   for (const selectedFile of result.filePaths) {
-    const fileName = path.basename(selectedFile);
-    const destination = path.join(imagesPath, fileName);
-    createTags(imagesPath, tagsPath, destination, null,[])
+    const fileName = path.basename(selectedFile)
+    const destination = path.join(imagesPath, fileName)
+    createTags(imagesPath, tagsPath, destination, null, [])
     try {
-      fs.copyFileSync(selectedFile, destination);
-      copiedPaths.push(destination);
+      fs.copyFileSync(selectedFile, destination)
+      copiedPaths.push(destination)
     } catch (err) {
-      console.error(`Ошибка при копировании ${selectedFile}:`, err);
+      console.error(`Ошибка при копировании ${selectedFile}:`, err)
     }
   }
 
-  return true; // вернём путь к скопированному файлу
+  return true // вернём путь к скопированному файлу
 }
 
 // IPC: сохранить теги
-ipcMain.handle("save-tags", async (_, name, tags) => {
+ipcMain.handle('save-tags', async (_, name, tags) => {
   saveTags(tagsPath, name, tags)
-  return true;
-});
+  return true
+})
 
 // IPC: загрузить теги
-ipcMain.handle("readFileAsBase64", async (_, filePath: string) => {
-      return await imgbase64(filePath)
-});
+ipcMain.handle('readFileAsBase64', async (_, filePath: string) => {
+  return await imgbase64(filePath)
+})
 
-
-ipcMain.handle("load-image", async (_, filters: Filter, page: number = 0):Promise<Images> => {
+ipcMain.handle('load-image', async (_, filters: Filter, page: number = 0): Promise<Images> => {
   const data = await getImagesFromFolder(tagsPath, imagesPath, filters, page, IMG_IN_PAGE)
-  return {imgs: data.img, page: page + 1, next_img: page + 20, pages: data.pages, imgInPage:IMG_IN_PAGE}
-});
+  return {
+    imgs: data.img,
+    page: page + 1,
+    next_img: page + 20,
+    pages: data.pages,
+    imgInPage: IMG_IN_PAGE
+  }
+})
 
-ipcMain.handle("load-image-no-tag", async (_, page: number = 0):Promise<Images> => {
+ipcMain.handle('load-image-no-tag', async (_, page: number = 0): Promise<Images> => {
   const data = await getImagesFromFolderNotTag(tagsPath, imagesPath, page, IMG_IN_PAGE)
-  return {imgs: data.img, page: page + 1, next_img: page + 20, pages: data.pages, imgInPage:IMG_IN_PAGE}
-});
+  return {
+    imgs: data.img,
+    page: page + 1,
+    next_img: page + 20,
+    pages: data.pages,
+    imgInPage: IMG_IN_PAGE
+  }
+})
 
-
-ipcMain.handle("get-image", async (_event, name:string, filter:Filter) => {
+ipcMain.handle('get-image', async (_event, name: string, filter: Filter) => {
   const data = await getImage(tagsPath, imagesPath, name, filter)
   return data
-});
+})
 
-ipcMain.handle("delete-image", async (_event, name:string) => {
+ipcMain.handle('delete-image', async (_event, name: string) => {
   const data = await deleteImage(tagsPath, imagesPath, name)
   return data
-});
+})
 
-ipcMain.handle("rename-image", async (_event, oldName:string, newName: string) => {
+ipcMain.handle('rename-image', async (_event, oldName: string, newName: string) => {
   return await renameInFile(tagsPath, oldName, newName)
-});
+})
 
-ipcMain.handle("rename-image-file", async (_event, oldName:string, newName: string) => {
+ipcMain.handle('rename-image-file', async (_event, oldName: string, newName: string) => {
   return await renameImageFile(tagsPath, imagesPath, oldName, newName)
-});
+})

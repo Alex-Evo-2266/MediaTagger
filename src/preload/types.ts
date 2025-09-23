@@ -1,16 +1,15 @@
 export type MediaFile = {
-  path: string;
-  tags: string[];
+  path: string
+  tags: string[]
   order?: string
-};
-
+}
 
 export type Filter = {
   search: string
   filter: {
     tags: string[]
   }
-};
+}
 
 export type Image = {
   path: string
@@ -33,7 +32,7 @@ export type Image64 = {
 
 export type Images = {
   imgs: Image[]
-  page: number,
+  page: number
   next_img: number | null
   pages: number
   imgInPage: number
