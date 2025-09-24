@@ -51,14 +51,13 @@ export default function GalleryNoTag(): JSX.Element {
         />
       </Box>
       {/* Диалог с увеличенной картинкой и тегами */}
-      {selected !== null && (
-        <ImageDialog
-          filter={{ filter: { tags: [] }, search: '' }}
-          name={selected}
-          onClose={() => setSelected(null)}
-          reload={load}
-        />
-      )}
+      <ImageDialog
+        open={selected !== null}
+        filter={{ filter: { tags: [] }, search: '' }}
+        name={selected ?? ''}
+        onClose={() => setSelected(null)}
+        reload={load}
+      />
     </Box>
   )
 }
