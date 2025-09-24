@@ -135,6 +135,36 @@ export const ImageDialog: React.FC<IImageDialog> = ({
     }
   }
 
+  const handleCopy = (): void => {
+    const text = JSON.stringify(tags)
+    navigator.clipboard
+      .writeText(text)
+      .then(() => {
+        console.log('Теги скопированы:', text)
+      })
+      .catch((err) => {
+        console.error('Ошибка копирования:', err)
+      })
+  }
+
+  function clipboardTag(): void {
+    navigator.clipboard
+      .readText()
+      .then((text) => {
+        const parsed = JSON.parse(text)
+
+        if (Array.isArray(parsed) && parsed.every((item) => typeof item === 'string')) {
+          setTags((prev) => {
+            const merged = [...prev, ...parsed]
+            return Array.from(new Set(merged))
+          })
+        } else {
+          console.error(parsed)
+        }
+      })
+      .catch((er) => console.error(er))
+  }
+
   return (
     <>
       <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
@@ -192,6 +222,12 @@ export const ImageDialog: React.FC<IImageDialog> = ({
               />
               <Button variant="contained" onClick={handleAddTag}>
                 Добавить
+              </Button>
+              <Button variant="outlined" onClick={handleCopy}>
+                Копировать
+              </Button>
+              <Button variant="outlined" onClick={clipboardTag}>
+                Вставить
               </Button>
             </Box>
           )}
