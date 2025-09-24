@@ -1,11 +1,9 @@
 import * as fs from 'fs'
 import * as path from 'path'
 
-import { getTags, loadData, saveData } from './tags'
+import { loadData, saveData } from './tags'
 import { Filter } from './types'
 import { Image, Image64 } from '../preload/types'
-
-// const SUPPORTED_EXTENSIONS = [".png", ".jpg", ".jpeg", ".gif", ".bmp"];
 
 export async function imgbase64(filePath: string): Promise<string> {
   const ext = path.extname(filePath).toLowerCase()
@@ -161,7 +159,6 @@ export async function getImage(
     if (!data) return null
     const image = data.path
     const imgPath = data.fullPath
-    const tags = getTags(folderPath, tagsPath, imgPath)
 
     // Получаем список всех имён
     const index = sorter.indexOf(data)
@@ -175,7 +172,7 @@ export async function getImage(
       fullPath: imgPath,
       base64: await imgbase64(imgPath),
       order: data.order,
-      tags,
+      tags: data.tags,
       name,
       prev,
       next

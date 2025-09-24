@@ -1,6 +1,5 @@
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew'
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos'
-import DeleteIcon from '@mui/icons-material/Delete'
 import {
   Dialog,
   DialogContent,
@@ -11,24 +10,38 @@ import {
   Stack,
   Chip,
   IconButton,
-  DialogContentText
+  DialogContentText,
+  Snackbar,
+  Alert
 } from '@mui/material'
 import { useState, useEffect, useCallback } from 'react'
 import { Filter, Image64 } from 'src/preload/types'
+
+import { ConfirmDialog } from './Confirm'
 
 interface IImageDialog {
   name: string
   onClose: () => void
   filter: Filter
   reload: () => void
+  onTagClick?: (tag: string) => void
+  open: boolean
 }
 
-export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, reload }) => {
+export const ImageDialog: React.FC<IImageDialog> = ({
+  name,
+  onClose,
+  filter,
+  reload,
+  onTagClick,
+  open
+}) => {
   const [currentImgName, setCurrentImgName] = useState(name)
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
   const [editing, setEditing] = useState(false)
   const [order, setOrder] = useState<string | null>(null)
+  const [alert, setAlert] = useState<string | null>(null)
   const [file, setFile] = useState<Image64 | null>(null)
 
   // Для диалога переименования
@@ -48,6 +61,10 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
   useEffect(() => {
     load()
   }, [load])
+
+  useEffect(() => {
+    setCurrentImgName(name)
+  }, [name])
 
   const handlePrev = (): void => {
     if (file?.prev) setCurrentImgName(file.prev)
@@ -71,35 +88,31 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
   const handleSave = (): void => {
     if (file) {
       window.api.saveTags(file.name, tags, order ?? undefined).then(() => {
-        alert('Теги сохранены')
         setEditing(false)
         reload()
+        setAlert('teg seve')
       })
     }
   }
 
   const handleDeleteImage = (): void => {
     if (file) {
-      if (confirm('Удалить изображение безвозвратно?')) {
-        window.api.deleteImg(file.name).then(() => {
-          alert('Изображение удалено')
-          reload()
-          if (file.next) {
-            setCurrentImgName(file.next)
-          } else if (file.prev) {
-            setCurrentImgName(file.prev)
-          } else {
-            onClose()
-          }
-        })
-      }
+      window.api.deleteImg(file.name).then(() => {
+        reload()
+        if (file.next) {
+          setCurrentImgName(file.next)
+        } else if (file.prev) {
+          setCurrentImgName(file.prev)
+        } else {
+          onClose()
+        }
+      })
     }
   }
 
   const handleRenameDisplay = (): void => {
     if (file && renameInput.trim() !== '') {
       window.api.renameImg(file.name, renameInput.trim()).then(() => {
-        alert('Имя обновлено (только отображаемое)')
         setRenameDialogOpen(false)
         load()
         reload()
@@ -111,13 +124,12 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
     if (file && renameInput.trim() !== '' && renameInput.trim() !== file.name) {
       window.api.renameImgFile(file.name, renameInput.trim()).then((success: boolean) => {
         if (success) {
-          alert('Файл переименован')
           setCurrentImgName(renameInput.trim())
           setRenameDialogOpen(false)
           load()
           reload()
         } else {
-          alert('Ошибка при переименовании файла')
+          setAlert('Ошибка при переименовании файла')
         }
       })
     }
@@ -125,7 +137,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
 
   return (
     <>
-      <Dialog open onClose={onClose} fullWidth maxWidth="lg">
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
         <DialogTitle>Изображение {file?.name}</DialogTitle>
         <DialogContent>
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
@@ -157,6 +169,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
                 key={tag}
                 label={tag}
                 onDelete={editing ? () => handleDeleteTag(tag) : undefined}
+                onClick={!editing && onTagClick ? () => onTagClick(tag) : undefined}
                 color="primary"
                 variant="outlined"
               />
@@ -206,15 +219,12 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
                 <Button variant="contained" onClick={handleSave}>
                   Сохранить
                 </Button>
-                <Button
+                <ConfirmDialog
                   color="error"
-                  variant="outlined"
-                  startIcon={<DeleteIcon />}
-                  onClick={handleDeleteImage}
-                  disabled={!file}
-                >
-                  Удалить
-                </Button>
+                  text="Удалить изображение безвозвратно?"
+                  textButton="Удалить"
+                  onConfirm={handleDeleteImage}
+                />
               </>
             )}
             {/* Кнопка для открытия диалога переименования */}
@@ -251,6 +261,12 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
           </Box>
         </DialogContent>
       </Dialog>
+
+      <Snackbar open={alert !== null} autoHideDuration={3000} onClose={() => setAlert(null)}>
+        <Alert onClose={() => setAlert(null)} severity="info" sx={{ width: '100%' }}>
+          {alert}
+        </Alert>
+      </Snackbar>
     </>
   )
 }

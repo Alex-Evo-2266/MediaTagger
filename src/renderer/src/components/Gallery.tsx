@@ -52,6 +52,12 @@ export default function Gallery(): JSX.Element {
     setTags(tags.filter((tag) => tag !== tagToDelete))
   }
 
+  const tagClick = (tag: string): void => {
+    setSearch('')
+    setTags([tag])
+    setSelected(null)
+  }
+
   return (
     <Box p={2} display="flex" flexDirection="column" height="100vh">
       {/* Поле для ввода тегов */}
@@ -104,14 +110,14 @@ export default function Gallery(): JSX.Element {
         />
       </Box>
       {/* Диалог с увеличенной картинкой и тегами */}
-      {selected !== null && (
-        <ImageDialog
-          filter={{ filter: { tags: tags }, search: '' }}
-          name={selected}
-          onClose={() => setSelected(null)}
-          reload={load}
-        />
-      )}
+      <ImageDialog
+        open={selected !== null}
+        filter={{ filter: { tags: tags }, search: '' }}
+        name={selected ?? ''}
+        onClose={() => setSelected(null)}
+        reload={load}
+        onTagClick={tagClick}
+      />
     </Box>
   )
 }
