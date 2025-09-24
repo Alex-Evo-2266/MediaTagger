@@ -1,4 +1,5 @@
 import { resolve } from 'path'
+import { normalizePath } from 'vite'
 
 import react from '@vitejs/plugin-react'
 import { defineConfig, externalizeDepsPlugin } from 'electron-vite'
@@ -22,8 +23,9 @@ export default defineConfig({
       viteStaticCopy({
         targets: [
           {
-            src: resolve(__dirname, 'src/renderer/alt.html'),
-            dest: '' // скопируется в корень dist/renderer
+            // теперь кроссплатформенно
+            src: normalizePath(resolve(__dirname, 'src/renderer/alt.html')),
+            dest: ''
           }
         ]
       })
