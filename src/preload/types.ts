@@ -7,7 +7,7 @@ export type MediaFile = {
 export type Filter = {
   search: string
   filter: {
-    tags: string[],
+    tags: string[]
     order?: string
   }
 }

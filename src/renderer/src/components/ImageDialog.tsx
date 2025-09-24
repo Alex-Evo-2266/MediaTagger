@@ -125,7 +125,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
 
   return (
     <>
-      <Dialog open onClose={onClose} maxWidth="md" fullWidth>
+      <Dialog open onClose={onClose} fullWidth maxWidth="lg">
         <DialogTitle>Изображение {file?.name}</DialogTitle>
         <DialogContent>
           <Box display="flex" alignItems="center" justifyContent="space-between" mb={2}>
@@ -139,7 +139,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
                 src={file.base64}
                 alt="preview"
                 maxHeight="60vh"
-                maxWidth="80%"
+                maxWidth="90%"
               />
             )}
 
@@ -188,7 +188,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({ name, onClose, filter, rel
               <TextField
                 fullWidth
                 label="поле для сортировки"
-                value={order ?? ""}
+                value={order ?? ''}
                 onChange={(e) => setOrder(e.target.value)}
               />
             </Box>

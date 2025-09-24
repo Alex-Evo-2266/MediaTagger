@@ -3,7 +3,8 @@ import { contextBridge, ipcRenderer } from 'electron'
 import { Filter } from './types'
 
 contextBridge.exposeInMainWorld('api', {
-  saveTags: (file: string, tags: string[], order?: string) => ipcRenderer.invoke('save-tags', file, tags, order),
+  saveTags: (file: string, tags: string[], order?: string) =>
+    ipcRenderer.invoke('save-tags', file, tags, order),
   readFileAsBase64: (filePath: string) => ipcRenderer.invoke('readFileAsBase64', filePath),
   loadImage: (filter: Filter, page: number = 0) => ipcRenderer.invoke('load-image', filter, page),
   loadImageNoTag: (page: number = 0) => ipcRenderer.invoke('load-image-no-tag', page),

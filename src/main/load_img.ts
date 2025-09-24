@@ -65,12 +65,14 @@ export async function getImagesFromFolder(
         fullPath: path.join(folderPath, option.path)
       }))
 
-
-    const sorter = (filter && filter.filter.tags.length > 0)? filtred.sort((a, b)=>{
-      const orderA = a.order ?? ""; // значение по умолчанию пустая строка
-      const orderB = b.order ?? "";
-      return orderA.localeCompare(orderB); // сравниваем строки
-    }): filtred
+    const sorter =
+      filter && filter.filter.tags.length > 0
+        ? filtred.sort((a, b) => {
+            const orderA = a.order ?? '' // значение по умолчанию пустая строка
+            const orderB = b.order ?? ''
+            return orderA.localeCompare(orderB) // сравниваем строки
+          })
+        : filtred
 
     const allPages = Math.ceil(filtred.length / pageSize)
     const sliceImage = sorter.slice(start, start + pageSize)
@@ -146,11 +148,14 @@ export async function getImage(
         fullPath: path.join(folderPath, option.path)
       }))
 
-    const sorter = (filter && filter.filter.tags.length > 0)? filtred.sort((a, b)=>{
-      const orderA = a.order ?? ""; // значение по умолчанию пустая строка
-      const orderB = b.order ?? "";
-      return orderA.localeCompare(orderB); // сравниваем строки
-    }): filtred
+    const sorter =
+      filter && filter.filter.tags.length > 0
+        ? filtred.sort((a, b) => {
+            const orderA = a.order ?? '' // значение по умолчанию пустая строка
+            const orderB = b.order ?? ''
+            return orderA.localeCompare(orderB) // сравниваем строки
+          })
+        : filtred
 
     const data = sorter.find((item) => item.name === name)
     if (!data) return null

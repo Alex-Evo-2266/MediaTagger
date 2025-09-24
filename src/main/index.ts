@@ -55,6 +55,7 @@ function createWindow(): void {
       submenu: [
         {
           label: 'Выбрать папку данных',
+          accelerator: 'CmdOrCtrl+O',
           click: () => {
             const folder = chooseDataFolder()
             if (!folder) return
@@ -102,16 +103,16 @@ function createWindow(): void {
         },
         { type: 'separator' },
         {
-          label: 'Exit',
+          label: 'Выход',
           role: 'quit'
         }
       ]
     },
     {
-      label: 'View',
+      label: 'Вид',
       submenu: [
         {
-          label: 'Toggle DevTools',
+          label: 'Панель разработчика',
           accelerator: 'CmdOrCtrl+Shift+I',
           click: () => mainWindow?.webContents.toggleDevTools()
         },
