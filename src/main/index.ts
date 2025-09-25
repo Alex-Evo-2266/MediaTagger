@@ -140,10 +140,9 @@ function initDataFolder(folder: string): void {
   userDataPath = folder
   configPath = path.join(userDataPath, 'config.json')
   tagsPath = path.join(userDataPath, 'tags.json')
-  imagesPath = path.join(userDataPath, 'images')
+  imagesPath = userDataPath
 
   if (!fs.existsSync(userDataPath)) fs.mkdirSync(userDataPath, { recursive: true })
-  if (!fs.existsSync(imagesPath)) fs.mkdirSync(imagesPath, { recursive: true })
   if (!fs.existsSync(configPath)) fs.writeFileSync(configPath, JSON.stringify({}), 'utf-8')
   if (!fs.existsSync(tagsPath)) fs.writeFileSync(tagsPath, JSON.stringify({}), 'utf-8')
 
