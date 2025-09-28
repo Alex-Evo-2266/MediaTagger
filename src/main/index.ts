@@ -318,6 +318,5 @@ ipcMain.handle('load-image-with-group', async (_, filters: Filter, page: number 
 
 ipcMain.handle('get-image-with-group', async (_event, name: [string, string?], filter: Filter) => {
   const data = await getImageWhithGroup(tagsPath, imagesPath, name, groupPath, filter)
-  console.log(data)
   return data
 })

@@ -146,7 +146,7 @@ export async function getItemsWithGroup(
 
     if (!matchSearch || !matchTags) continue;
 
-    const first = await getImage(tagsPath, folderPath, files[0], filter);
+    const first = await getImage(tagsPath, folderPath, files[0]);
     groups.push({
       type: "group",
       name: seqName,
@@ -202,9 +202,25 @@ export async function getImageWhithGroup(
 
     const items = await getItemsWithGroup(tagsPath, folderPath, sequencesPath, filter);
 
+
     // Создаём плоский список галереи
     const flatList: { name: string; group?: string }[] = [];
-    for (const item of items) {
+
+    const index = groupName?
+    items.findIndex((el)=>el.type === "group" && el.name === groupName):
+    items.findIndex((el)=>el.type === "image" && el.name === fileName)
+    if (index === -1)
+        return null
+    const prevIndex = index > 0? index - 1: undefined
+    const nextIndex = index < items.length - 1? index + 1: undefined
+    const items_s = [items[index]]
+    if(prevIndex !== undefined)
+        items_s.unshift(items[prevIndex])
+    if(nextIndex !== undefined)
+        items_s.push(items[nextIndex])
+
+
+    for (const item of items_s) {
       if (item.type === "group") {
         for (const imgName of item.images) {
           flatList.push({ name: imgName, group: item.name });
@@ -223,7 +239,7 @@ export async function getImageWhithGroup(
     const prevItem = flatList[currentIndex - 1];
     const nextItem = flatList[currentIndex + 1];
 
-    const data = await getImage(tagsPath, folderPath, fileName, filter);
+    const data = await getImage(tagsPath, folderPath, fileName);
     if (!data) return null;
 
     const prev: [string, string?] | undefined =
