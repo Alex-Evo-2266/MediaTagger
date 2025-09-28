@@ -14,7 +14,8 @@ import {
 import { syncTagsWithFiles } from './sinhron'
 import { createTags, renameInFile, saveTags } from './tags'
 import { Filter, Images } from './types'
-import { addArrToSequence, getGroup, loadSequences, removeFromSequence } from './group'
+import { addArrToSequence, deleteSequence, getGalleryItems, getGroup, loadSequences, removeFromSequence, reorderSequence } from './group'
+import { ImagesWithGroup } from '../preload/types'
 
 let mainWindow: BrowserWindow | null = null
 let userDataPath: string
@@ -147,6 +148,15 @@ function createWindow(): void {
               click: () => {
                 if (!mainWindow) return
                 mainWindow.webContents.send('navigate', "groups")
+              }
+            },
+            {
+              label: 'Галерея',
+              type: 'radio',
+              checked: false,
+              click: () => {
+                if (!mainWindow) return
+                mainWindow.webContents.send('navigate', "withGroup")
               }
             }
           ]
@@ -284,5 +294,24 @@ ipcMain.handle('get-all-groups', async (_event) => {
 })
 
 ipcMain.handle('get-group', async (_event, group: string) => {
-  return await getGroup(groupPath, group)
+  return await getGroup(tagsPath, imagesPath, groupPath, group)
+})
+
+ipcMain.handle('delete-group', async (_event, group: string) => {
+  return await deleteSequence(groupPath, group)
+})
+
+ipcMain.handle('reorder-group', async (_event, group: string, images: string[]) => {
+  return await reorderSequence(groupPath, group, images)
+})
+
+ipcMain.handle('load-image-with-group', async (_, filters: Filter, page: number = 0): Promise<ImagesWithGroup> => {
+  const data = await getGalleryItems(tagsPath, imagesPath, groupPath, filters, page, IMG_IN_PAGE)
+  return {
+    imgs: data.items,
+    page: page + 1,
+    next_img: page + 20,
+    pages: data.pages,
+    imgInPage: IMG_IN_PAGE
+  }
 })

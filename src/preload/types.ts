@@ -33,8 +33,25 @@ export type Image64 = {
   prev?: string
 }
 
+export type GalleryItem =
+  | ({ type: "image" } & Image)
+  | ({
+      type: "group";
+      name: string;              // имя группы
+      images: string[];          // список имён файлов
+      preview: Image | null;     // превьюшка
+    });
+
 export type Images = {
   imgs: Image[]
+  page: number
+  next_img: number | null
+  pages: number
+  imgInPage: number
+}
+
+export type ImagesWithGroup = {
+  imgs: GalleryItem[]
   page: number
   next_img: number | null
   pages: number

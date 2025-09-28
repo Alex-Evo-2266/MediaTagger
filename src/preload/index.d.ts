@@ -1,6 +1,6 @@
 import { ElectronAPI } from '@electron-toolkit/preload'
 
-import type { Filter, Images } from './types'
+import type { Filter, Image64, Images } from './types'
 
 interface API {
   readFileAsBase64: (filePath: string) => Promise<string>
@@ -17,7 +17,10 @@ interface API {
   addImageInGroup: (group: string, nameImage: string) => Promise<void>
   deleteImageInGroup: (group: string, nameImage: string) => Promise<void>
   getGroups: () => Promise<Record<string, string[]>>
-  getGroup: (group: string) => Promise<string[]>
+  getGroup: (group: string) => Promise<Image64[]>
+  deleteGroup: (group: string) => Promise<void>
+  reorderGroup: (group: string, images: string[]) => Promise<void>
+  loadImageWithGroup: (filter: Filter, page?: number) => Promise<ImagesWithGroup>
 }
 
 declare global {

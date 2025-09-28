@@ -4,6 +4,7 @@ import { JSX, useEffect, useState } from 'react'
 import Gallery from './components/Gallery'
 import GalleryNoTag from './components/GalleryNoTag'
 import GroupsTable from './components/Groups'
+import GalleryWithGroup from './components/GalleryWithGroup'
 
 const darkTheme = createTheme({
   palette: {
@@ -35,6 +36,8 @@ function App(): JSX.Element {
       <GalleryNoTag /> : 
       page === "groups" ?
       <GroupsTable /> :
+      page === "withGroup" ?
+      <GalleryWithGroup /> :
       <Gallery />
       }
       </ThemeProvider>

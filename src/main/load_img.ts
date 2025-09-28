@@ -119,7 +119,7 @@ export async function getImage(
   tagsPath: string,
   folderPath: string,
   name: string,
-  filter: Filter
+  filter?: Filter
 ): Promise<Image64 | null> {
   try {
     const tagsFile = loadData(tagsPath)
