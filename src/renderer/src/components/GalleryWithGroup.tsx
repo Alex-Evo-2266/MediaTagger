@@ -2,15 +2,15 @@ import { Pagination, Box, TextField, Stack, Chip, Typography, Card, CardContent 
 import Grid from "@mui/material/Grid";
 import { JSX, useCallback, useEffect, useState } from "react";
 
-import { ImageDialog } from "./ImageDialog";
 import { GalleryItem, ImagesWithGroup } from "src/preload/types";
 import { Content } from "./ItemGallery";
+import { ImageDialogWithGroup } from "./ImageDialogWithGroup";
 
 export default function GalleryWithGroup(): JSX.Element {
   const [page, setPage] = useState<number>(0);
   const [pages, setPages] = useState<number>(1);
   const [items, setItems] = useState<GalleryItem[]>([]);
-  const [selected, setSelected] = useState<string | null>(null);
+  const [selected, setSelected] = useState<[string, string?] | null>(null);
   const [tagInput, setTagInput] = useState<string>("");
   const [search, setSearch] = useState<string>("");
   const [tags, setTags] = useState<string[]>([]);
@@ -58,11 +58,10 @@ export default function GalleryWithGroup(): JSX.Element {
   };
 
   const handleItemClick = (item: GalleryItem) => {
-    if (item.type === "group") {
-      // Открыть страницу группы
-      window.api.getImage(item.name);
-    } else {
-      setSelected(item.name);
+    if (item.type === "group" && item.images.length > 0) {
+      setSelected([item.images[0], item.name]);
+    } else if (item.type === "image") {
+      setSelected([item.name]);
     }
   };
 
@@ -104,7 +103,7 @@ export default function GalleryWithGroup(): JSX.Element {
           {items.map((item) => (
             <Grid key={item.type === "image" ? item.name : item.name}>
               {item.type === "group" ? (
-                <Card onClick={() => handleItemClick(item)} sx={{ cursor: "pointer" }}>
+                <Card onClick={() => handleItemClick(item, )} sx={{ cursor: "pointer" }}>
                   {item.preview && (
                     <Content file={item.preview} onClick={() => {}}/>
                     // <CardMedia component="img" height="140" image={item.preview.base64} alt={item.name} />
@@ -138,10 +137,11 @@ export default function GalleryWithGroup(): JSX.Element {
 
       {/* Диалог с увеличенной картинкой и тегами */}
       {selected && (
-        <ImageDialog
+        <ImageDialogWithGroup
           open={selected !== null}
           filter={{ filter: { tags }, search: "" }}
-          name={selected ?? ""}
+          name={selected[0] ?? ""}
+          group={selected[1]}
           onClose={() => setSelected(null)}
           reload={load}
           onTagClick={tagClick}

@@ -15,10 +15,10 @@ export type Filter = {
 export type Image = {
   path: string
   fullPath: string
+  order?: string
   name: string
   tags: string[]
   next?: string
-  order?: string
   prev?: string
 }
 
@@ -27,10 +27,33 @@ export type Image64 = {
   fullPath: string
   order?: string
   name: string
-  base64: string
   tags: string[]
   next?: string
   prev?: string
+  base64: string
+}
+
+export type ImageWithGroup = {
+  path: string
+  fullPath: string
+  order?: string
+  group?: string
+  name: string
+  tags: string[]
+  next?: [string, string?]
+  prev?: [string, string?]
+}
+
+export type Image64WithGroup = {
+  path: string
+  fullPath: string
+  order?: string
+  group?: string
+  name: string
+  tags: string[]
+  next?: [string, string?]
+  prev?: [string, string?]
+  base64: string
 }
 
 export type GalleryItem =

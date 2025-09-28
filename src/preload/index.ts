@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('api', {
   loadImageNoTag: (page: number = 0) => ipcRenderer.invoke('load-image-no-tag', page),
   loadImageWithGroup: (filter: Filter, page: number = 0) => ipcRenderer.invoke('load-image-with-group', filter, page),
   getImage: (name: string, filter?: Filter) => ipcRenderer.invoke('get-image', name, filter),
+  getImageWithGroup: (name: [string, string?], filter?: Filter) => ipcRenderer.invoke('get-image-with-group', name, filter),
   deleteImg: (name: string) => ipcRenderer.invoke('delete-image', name),
   renameImg: (oldName: string, newName: string) =>
     ipcRenderer.invoke('rename-image', oldName, newName),

@@ -14,7 +14,7 @@ import {
 import { syncTagsWithFiles } from './sinhron'
 import { createTags, renameInFile, saveTags } from './tags'
 import { Filter, Images } from './types'
-import { addArrToSequence, deleteSequence, getGalleryItems, getGroup, loadSequences, removeFromSequence, reorderSequence } from './group'
+import { addArrToSequence, deleteSequence, getGalleryItems, getGroup, getImageWhithGroup, loadSequences, removeFromSequence, reorderSequence } from './group'
 import { ImagesWithGroup } from '../preload/types'
 
 let mainWindow: BrowserWindow | null = null
@@ -314,4 +314,10 @@ ipcMain.handle('load-image-with-group', async (_, filters: Filter, page: number 
     pages: data.pages,
     imgInPage: IMG_IN_PAGE
   }
+})
+
+ipcMain.handle('get-image-with-group', async (_event, name: [string, string?], filter: Filter) => {
+  const data = await getImageWhithGroup(tagsPath, imagesPath, name, groupPath, filter)
+  console.log(data)
+  return data
 })

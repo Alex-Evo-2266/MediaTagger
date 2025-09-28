@@ -1,7 +1,8 @@
 import fs from "fs";
-import { getImage, getImagesFromFolder } from "./load_img";
-import { GalleryItem, Image64 } from "../preload/types";
+import { getImage, getImagesFromFolder, imgbase64 } from "./load_img";
+import { GalleryItem, Image64, Image64WithGroup, ImageWithGroup } from "../preload/types";
 import { Filter } from "./types";
+import { loadData } from "./tags";
 
 export function loadSequences(sequencesPath: string): Record<string, string[]> {
   if (!fs.existsSync(sequencesPath)) return {};
@@ -110,30 +111,40 @@ export async function getGroup(
 /**
  * Получить список для галереи: обычные изображения + группы
  */
-export async function getGalleryItems(
+export async function getItemsWithGroup(
   tagsPath: string,
   folderPath: string,
   sequencesPath: string,
-  filter: Filter,
-  page: number = 0,
-  pageSize: number = 10
-): Promise<{ items: GalleryItem[]; pages: number }> {
-  // 1. Загружаем группы
+  filter?: Filter
+): Promise<GalleryItem[]> {
   const sequences = loadSequences(sequencesPath);
 
-  // Собираем все имена файлов, которые входят в группы
-  const groupedImages = new Set(
-    Object.values(sequences).flatMap((seq) => seq)
-  );
+  const groupedImages = new Set(Object.values(sequences).flatMap((seq) => seq));
 
   const groups: GalleryItem[] = [];
   for (const [seqName, files] of Object.entries(sequences)) {
     if (files.length === 0) continue;
 
-    const matchSearch =
-      !filter.search || seqName.toLowerCase().includes(filter.search.toLowerCase());
+    // Проверка фильтра
+    let matchSearch = true;
+    if (filter?.search) {
+      matchSearch = seqName.toLowerCase().includes(filter.search.toLowerCase());
+    }
 
-    if (!matchSearch) continue;
+    let matchTags = true;
+    if (filter && filter.filter.tags.length > 0) {
+      // Проверяем: есть ли хотя бы один файл в группе с нужным тегом
+      const tagsFile = loadData(tagsPath);
+      matchTags = files.some((fileName) => {
+        const fileData = tagsFile[fileName];
+        if (!fileData) return false;
+        return filter.filter.tags.every((tag) =>
+          fileData.tags.some((t) => t.toLowerCase() === tag.toLowerCase())
+        );
+      });
+    }
+
+    if (!matchSearch || !matchTags) continue;
 
     const first = await getImage(tagsPath, folderPath, files[0], filter);
     groups.push({
@@ -157,10 +168,90 @@ export async function getGalleryItems(
   // 3. Объединяем
   const allItems = [...groups, ...images];
 
-  // Пагинация (по общему списку)
+  return allItems;
+}
+
+
+export async function getGalleryItems(
+  tagsPath: string,
+  folderPath: string,
+  sequencesPath: string,
+  filter?: Filter,
+  page: number = 0,
+  pageSize: number = 10
+): Promise<{ items: GalleryItem[]; pages: number }> {
+  const allItems = await getItemsWithGroup(tagsPath, folderPath, sequencesPath, filter);
+
   const totalPages = Math.ceil(allItems.length / pageSize);
   const start = page * pageSize;
   const items = allItems.slice(start, start + pageSize);
 
   return { items, pages: totalPages };
+}
+
+
+export async function getImageWhithGroup(
+  tagsPath: string,
+  folderPath: string,
+  nameTuple: [string, string?], // [file_name, group_name?]
+  sequencesPath: string,
+  filter?: Filter
+): Promise<Image64WithGroup | null> {
+  try {
+    const [fileName, groupName] = nameTuple;
+    console.log(nameTuple)
+
+    // Получаем полный список элементов в порядке, как в галерее
+    const items = await getItemsWithGroup(tagsPath, folderPath, sequencesPath, filter);
+
+    // Находим текущий элемент
+    const index = items.findIndex(item => {
+      if (item.type === "group" && groupName) {
+        return item.name === groupName && item.images.includes(fileName);
+      }
+      if (item.type === "image" && !groupName) {
+        return item.name === fileName;
+      }
+      return false;
+    });
+
+    if (index === -1) return null;
+
+    const currentItem = items[index];
+    let sorter: ImageWithGroup[] = [];
+
+    // Если это группа — строим сортированный список её картинок
+    if (currentItem.type === "group") {
+      sorter = await Promise.all(
+        currentItem.images.map(async (imgName) => {
+          const img = await getImage(tagsPath, folderPath, imgName, filter);
+          return img ? { ...img, name: imgName, prev: undefined, next: undefined } : null;
+        })
+      ).then(res => res.filter((x) => x !== null));
+    } else {
+      sorter = items.filter(i => i.type === "image") as ImageWithGroup[];
+    }
+
+    const data = sorter.find(img => img.name === fileName);
+    if (!data) return null;
+
+    const imgIndex = sorter.findIndex(img => img.name === fileName);
+
+    const prev = imgIndex > 0 && sorter[imgIndex - 1] ? [sorter[imgIndex - 1].name, groupName] as [string, (string | undefined)] : undefined;
+    const next = imgIndex < sorter.length - 1 ? [sorter[imgIndex + 1].name, groupName] as [string, (string | undefined)] : undefined;
+
+    return {
+      path: data.path,
+      fullPath: data.fullPath,
+      base64: await imgbase64(data.fullPath),
+      order: data.order,
+      tags: data.tags,
+      name: fileName,
+      prev,
+      next,
+    };
+  } catch (err) {
+    console.error("Ошибка при чтении файла:", err);
+    return null;
+  }
 }
