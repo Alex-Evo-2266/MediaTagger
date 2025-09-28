@@ -10,8 +10,10 @@ import {
   IconButton
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
+import EditIcon from "@mui/icons-material/Edit";
 import { Preview } from "./Prev";
 import { GroupPage } from "./Group";
+import { GroupPageScroll } from "./GroupPageScroll";
 
 
 export default function GroupsTable() {
@@ -19,6 +21,7 @@ export default function GroupsTable() {
     const [openDialog, setOpenDialog] = useState(false);
     const [sequenceToDelete, setSequenceToDelete] = useState<string | null>(null);
     const [selectGroup, setSelectGroup] = useState<string | null>(null) 
+    const [editGroup, seteditGroup] = useState<string | null>(null) 
 
   useEffect(() => {
     window.api.getGroups().then(res=>{
@@ -48,8 +51,11 @@ export default function GroupsTable() {
     }
   },[sequenceToDelete])
 
+  if(editGroup !== null)
+    return <GroupPage groupName={editGroup} onBack={()=>setSelectGroup(null)}/>
+
   if(selectGroup !== null)
-    return <GroupPage groupName={selectGroup} onBack={()=>setSelectGroup(null)}/>
+    return <GroupPageScroll groupName={selectGroup} onBack={()=>setSelectGroup(null)}/>
 
   return (
     <Box sx={{ width: "100vw"}}>
@@ -60,6 +66,7 @@ export default function GroupsTable() {
                 <TableCell>Превью</TableCell>
                 <TableCell>Название группы</TableCell>
                 <TableCell>Количество изображений</TableCell>
+                <TableCell>Действия</TableCell>
             </TableRow>
             </TableHead>
             <TableBody>
@@ -77,6 +84,9 @@ export default function GroupsTable() {
                 <TableCell>{name}</TableCell>
                 <TableCell>{images.length}</TableCell>
                 <TableCell>
+                  <IconButton color='default' onClick={() => seteditGroup(name)}>
+                    <EditIcon />
+                  </IconButton>
                   <IconButton color="error" onClick={() => handleDeleteClick(name)}>
                     <DeleteIcon />
                   </IconButton>

@@ -14,7 +14,6 @@ export default function GalleryNoTag(): JSX.Element {
 
   const load = useCallback(() => {
     window.api.loadImageNoTag(page).then((res) => {
-      console.log(res)
       setImages(res.imgs)
       setPages(res.pages)
     })

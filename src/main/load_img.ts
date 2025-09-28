@@ -27,20 +27,13 @@ export async function imgbase64(filePath: string): Promise<string> {
   return data
 }
 
-export async function getImagesFromFolder(
+export async function getImagesFromFolderAll(
   tagsPath: string,
   folderPath: string,
-  filter: Filter | undefined,
-  page: number = 0,
-  pageSize: number = 10
-): Promise<{
-  img: Image[]
-  pages: number
-}> {
-  try {
+  filter: Filter | undefined
+): Promise<Image[]> {
     const tagsFile = loadData(tagsPath)
     const items = Object.entries(tagsFile)
-    const start = page * pageSize
 
     const filtred: Image[] = items
       .filter(([name, option]) => {
@@ -71,8 +64,24 @@ export async function getImagesFromFolder(
             return orderA.localeCompare(orderB) // сравниваем строки
           })
         : filtred
+    return sorter
+}
 
-    const allPages = Math.ceil(filtred.length / pageSize)
+export async function getImagesFromFolder(
+  tagsPath: string,
+  folderPath: string,
+  filter: Filter | undefined,
+  page: number = 0,
+  pageSize: number = 10
+): Promise<{
+  img: Image[]
+  pages: number
+}> {
+  try {
+    const sorter = await getImagesFromFolderAll(tagsPath, folderPath, filter)
+
+    const start = page * pageSize
+    const allPages = Math.ceil(sorter.length / pageSize)
     const sliceImage = sorter.slice(start, start + pageSize)
 
     return { img: sliceImage, pages: allPages }

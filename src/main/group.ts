@@ -1,6 +1,6 @@
 import fs from "fs";
-import { getImage, getImagesFromFolder, imgbase64 } from "./load_img";
-import { GalleryItem, Image64, Image64WithGroup, ImageWithGroup } from "../preload/types";
+import { getImage, getImagesFromFolderAll, imgbase64 } from "./load_img";
+import { GalleryItem, Image64, Image64WithGroup } from "../preload/types";
 import { Filter } from "./types";
 import { loadData } from "./tags";
 
@@ -156,8 +156,7 @@ export async function getItemsWithGroup(
   }
 
   // 2. Загружаем одиночные картинки
-  const { img } = await getImagesFromFolder(tagsPath, folderPath, filter);
-
+  const img = await getImagesFromFolderAll(tagsPath, folderPath, filter);
   const images: GalleryItem[] = img
     .filter((image) => !groupedImages.has(image.name)) // убираем те, что в группах
     .map((image) => ({

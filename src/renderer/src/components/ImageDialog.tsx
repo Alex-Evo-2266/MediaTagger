@@ -55,7 +55,6 @@ export const ImageDialog: React.FC<IImageDialog> = ({
 
   const load = useCallback(() => {
     window.api.getImage(currentImgName, filter).then((res: Image64 | null) => {
-      console.log(res)
       setFile(res)
       setOrder(res?.order ?? null)
       setTags(res?.tags ?? [])

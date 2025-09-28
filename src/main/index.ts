@@ -129,7 +129,7 @@ function createWindow(): void {
               checked: false,
               click: () => {
                 if (!mainWindow) return
-                mainWindow.webContents.send('navigate', "main")
+                mainWindow.webContents.send('navigate', "all")
               }
             },
             {
@@ -153,7 +153,7 @@ function createWindow(): void {
             {
               label: 'Галерея',
               type: 'radio',
-              checked: false,
+              checked: true,
               click: () => {
                 if (!mainWindow) return
                 mainWindow.webContents.send('navigate', "withGroup")

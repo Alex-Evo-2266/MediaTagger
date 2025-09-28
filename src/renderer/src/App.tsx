@@ -21,7 +21,7 @@ const darkTheme = createTheme({
 })
 
 function App(): JSX.Element {
-  const [page, setPage] = useState("main")
+  const [page, setPage] = useState("withGroup")
 
   useEffect(() => {
     window.api.onNavigate((page) => {
@@ -38,7 +38,9 @@ function App(): JSX.Element {
       <GroupsTable /> :
       page === "withGroup" ?
       <GalleryWithGroup /> :
-      <Gallery />
+      page === "all"?
+      <Gallery />:
+      <GalleryWithGroup />
       }
       </ThemeProvider>
   )

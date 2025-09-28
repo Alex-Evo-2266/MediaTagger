@@ -98,7 +98,8 @@ export const GroupPage:React.FC<GroupPageProps> = ({groupName, onBack}) => {
                           position: "absolute",
                           top: 2,
                           right: 2,
-                          bgcolor: "rgba(255,255,255,0.7)",
+                          bgcolor: "#dd4444",
+                          color: "#fff"
                         }}
                         onClick={() => handleDeleteClick(img.name)}
                       >

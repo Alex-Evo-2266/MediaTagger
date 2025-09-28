@@ -19,7 +19,6 @@ export default function GalleryWithGroup(): JSX.Element {
     window.api
       .loadImageWithGroup({ filter: {tags}, search }, page)
       .then((res: ImagesWithGroup) => {
-        console.log(res)
         setItems(res.imgs);
         setPages(res.pages);
       });
