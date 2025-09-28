@@ -12,8 +12,12 @@ interface API {
   renameImg: (oldName: string, newName: string) => Promise<void>
   renameImgFile: (oldName: string, newName: string) => Promise<boolean>
   onTagsUpdated: (callback: (updated: boolean) => void) => Electron.IpcRenderer
-  onToggleNoImageView: (callback: (enabled: boolean) => void) => void
+  onNavigate: (callback: (page: string) => void) => void
   selectFolder: () => void
+  addImageInGroup: (group: string, nameImage: string) => Promise<void>
+  deleteImageInGroup: (group: string, nameImage: string) => Promise<void>
+  getGroups: () => Promise<Record<string, string[]>>
+  getGroup: (group: string) => Promise<string[]>
 }
 
 declare global {

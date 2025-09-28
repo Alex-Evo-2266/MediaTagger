@@ -3,6 +3,7 @@ import { JSX, useEffect, useState } from 'react'
 
 import Gallery from './components/Gallery'
 import GalleryNoTag from './components/GalleryNoTag'
+import GroupsTable from './components/Groups'
 
 const darkTheme = createTheme({
   palette: {
@@ -19,16 +20,24 @@ const darkTheme = createTheme({
 })
 
 function App(): JSX.Element {
-  const [noTagPage, setNoTagPage] = useState(false)
+  const [page, setPage] = useState("main")
 
   useEffect(() => {
-    window.api.onToggleNoImageView((enabled) => {
-      setNoTagPage(enabled)
+    window.api.onNavigate((page) => {
+      setPage(page)
     })
   }, [])
 
   return (
-    <ThemeProvider theme={darkTheme}>{noTagPage ? <GalleryNoTag /> : <Gallery />}</ThemeProvider>
+    <ThemeProvider theme={darkTheme}>
+      {
+      page === "notag" ? 
+      <GalleryNoTag /> : 
+      page === "groups" ?
+      <GroupsTable /> :
+      <Gallery />
+      }
+      </ThemeProvider>
   )
 }
 

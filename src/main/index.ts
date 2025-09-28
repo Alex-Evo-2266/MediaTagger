@@ -14,11 +14,13 @@ import {
 import { syncTagsWithFiles } from './sinhron'
 import { createTags, renameInFile, saveTags } from './tags'
 import { Filter, Images } from './types'
+import { addArrToSequence, getGroup, loadSequences, removeFromSequence } from './group'
 
 let mainWindow: BrowserWindow | null = null
 let userDataPath: string
 let configPath: string
 let tagsPath: string
+let groupPath: string
 let imagesPath: string
 const IMG_IN_PAGE = 10
 const isDev = process.env.NODE_ENV === 'development'
@@ -73,7 +75,8 @@ function createWindow(): void {
               mainWindow?.webContents.send('paths-initialized', {
                 configPath,
                 tagsPath,
-                imagesPath
+                imagesPath,
+                groupPath
               })
             })
           }
@@ -117,13 +120,36 @@ function createWindow(): void {
           click: () => mainWindow?.webContents.toggleDevTools()
         },
         {
-          label: 'Посказать изображения без тегов',
-          type: 'checkbox',
-          checked: false,
-          click: (menuItem) => {
-            if (!mainWindow) return
-            mainWindow.webContents.send('toggle-no-tag-images', menuItem.checked)
-          }
+          label: 'Страница',
+          submenu: [
+            {
+              label: 'Все медиа',
+              type: 'radio',
+              checked: false,
+              click: () => {
+                if (!mainWindow) return
+                mainWindow.webContents.send('navigate', "main")
+              }
+            },
+            {
+              label: 'Посказать изображения без тегов',
+              type: 'radio',
+              checked: false,
+              click: () => {
+                if (!mainWindow) return
+                mainWindow.webContents.send('navigate', "notag")
+              }
+            },
+            {
+              label: 'Группы',
+              type: 'radio',
+              checked: false,
+              click: () => {
+                if (!mainWindow) return
+                mainWindow.webContents.send('navigate', "groups")
+              }
+            }
+          ]
         }
       ]
     }
@@ -140,11 +166,13 @@ function initDataFolder(folder: string): void {
   userDataPath = folder
   configPath = path.join(userDataPath, 'config.json')
   tagsPath = path.join(userDataPath, 'tags.json')
+  groupPath = path.join(userDataPath, 'sequences.json')
   imagesPath = userDataPath
 
   if (!fs.existsSync(userDataPath)) fs.mkdirSync(userDataPath, { recursive: true })
   if (!fs.existsSync(configPath)) fs.writeFileSync(configPath, JSON.stringify({}), 'utf-8')
   if (!fs.existsSync(tagsPath)) fs.writeFileSync(tagsPath, JSON.stringify({}), 'utf-8')
+  if (!fs.existsSync(groupPath)) fs.writeFileSync(groupPath, JSON.stringify({}), 'utf-8')
 
   console.log('Папка данных выбрана:', userDataPath)
 }
@@ -241,4 +269,20 @@ ipcMain.handle('select-data-folder', async () => {
   }
 
   return folder
+})
+
+ipcMain.handle('add-image-in-group', async (_event, group: string, image: string) => {
+  return await addArrToSequence(groupPath, group, [image])
+})
+
+ipcMain.handle('delete-image-in-group', async (_event, group: string, image: string) => {
+  return await removeFromSequence(groupPath, group, image)
+})
+
+ipcMain.handle('get-all-groups', async (_event) => {
+  return await loadSequences(groupPath)
+})
+
+ipcMain.handle('get-group', async (_event, group: string) => {
+  return await getGroup(groupPath, group)
 })

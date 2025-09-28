@@ -47,6 +47,8 @@ export const ImageDialog: React.FC<IImageDialog> = ({
   // Для диалога переименования
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
   const [renameInput, setRenameInput] = useState('')
+  const [groupName, setGroupName] = useState('')
+  const [selectGroup, setSelectGroup] = useState(false)
 
   const load = useCallback(() => {
     window.api.getImage(currentImgName, filter).then((res: Image64 | null) => {
@@ -165,6 +167,14 @@ export const ImageDialog: React.FC<IImageDialog> = ({
       .catch((er) => console.error(er))
   }
 
+  const handleAddinGroup = () => {
+    if(file)
+    {
+      window.api.addImageInGroup(groupName, file.name)
+      setSelectGroup(false)
+    }
+  }
+
   return (
     <>
       <Dialog open={open} onClose={onClose} fullWidth maxWidth="lg">
@@ -234,12 +244,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
 
           {editing && (
             <Box display="flex" gap={1} mb={2}>
-              <TextField
-                fullWidth
-                label="поле для сортировки"
-                value={order ?? ''}
-                onChange={(e) => setOrder(e.target.value)}
-              />
+              <Button onClick={()=>setSelectGroup(true)}>добавить в группу</Button>
             </Box>
           )}
 
@@ -293,6 +298,28 @@ export const ImageDialog: React.FC<IImageDialog> = ({
             </Button>
             <Button variant="contained" onClick={handleRenameFile}>
               Поменять файл
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
+        open={selectGroup}
+        onClose={() => setSelectGroup(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Выбор группы</DialogTitle>
+        <DialogContent>
+          <Box display="flex" gap={1} mt={1}>
+            <TextField
+              fullWidth
+              label="группы"
+              value={groupName}
+              onChange={(e) => setGroupName(e.target.value)}
+            />
+            <Button variant="outlined" onClick={handleAddinGroup}>
+              Добавить
             </Button>
           </Box>
         </DialogContent>

@@ -16,8 +16,13 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('rename-image-file', oldName, newName),
   onTagsUpdated: (callback: (updated: boolean) => void) =>
     ipcRenderer.on('tags-updated', (_event, updated) => callback(updated)),
-  onToggleNoImageView: (callback: (enabled: boolean) => void) => {
-    ipcRenderer.on('toggle-no-tag-images', (_, enabled: boolean) => callback(enabled))
+  onNavigate: (callback: (page: string) => void) => {
+    ipcRenderer.on('navigate', (_, page: string) => callback(page))
   },
-  selectFolder: () => ipcRenderer.invoke('select-data-folder')
+  selectFolder: () => ipcRenderer.invoke('select-data-folder'),
+  addImageInGroup: (group: string, nameImage: string) => ipcRenderer.invoke('add-image-in-group', group, nameImage),
+  deleteImageInGroup: (group: string, nameImage: string) => ipcRenderer.invoke('delete-image-in-group', group, nameImage),
+  getGroups: () => ipcRenderer.invoke('get-all-groups'),
+  getGroup: (group: string) => ipcRenderer.invoke('get-group', group),
+
 })
