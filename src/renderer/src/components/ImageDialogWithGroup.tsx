@@ -18,6 +18,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Filter, Image64WithGroup } from 'src/preload/types'
 
 import { ConfirmDialog } from './Confirm'
+import { ImageLightbox } from './ImageLightbox'
 
 interface IImageDialog {
   name: string
@@ -45,6 +46,7 @@ export const ImageDialogWithGroup: React.FC<IImageDialog> = ({
   const [order, setOrder] = useState<string | null>(null)
   const [alert, setAlert] = useState<string | null>(null)
   const [file, setFile] = useState<Image64WithGroup | null>(null)
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   // Для диалога переименования
   const [groupName, setGroupName] = useState('')
@@ -166,6 +168,7 @@ export const ImageDialogWithGroup: React.FC<IImageDialog> = ({
                 alt="preview"
                 maxHeight="60vh"
                 maxWidth="90%"
+                onClick={()=>setLightboxOpen(true)}
               />
             )}
 
@@ -274,6 +277,12 @@ export const ImageDialogWithGroup: React.FC<IImageDialog> = ({
           {alert}
         </Alert>
       </Snackbar>
+      
+      <ImageLightbox
+        open={lightboxOpen}
+        imageSrc={file?.base64 || ''}
+        onClose={() => setLightboxOpen(false)}
+      />
     </>
   )
 }

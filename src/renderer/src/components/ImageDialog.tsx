@@ -18,6 +18,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { Filter, Image64 } from 'src/preload/types'
 
 import { ConfirmDialog } from './Confirm'
+import { ImageLightbox } from './ImageLightbox'
 
 interface IImageDialog {
   name: string
@@ -49,6 +50,8 @@ export const ImageDialog: React.FC<IImageDialog> = ({
   const [renameInput, setRenameInput] = useState('')
   const [groupName, setGroupName] = useState('')
   const [selectGroup, setSelectGroup] = useState(false)
+
+  const [lightboxOpen, setLightboxOpen] = useState(false)
 
   const load = useCallback(() => {
     window.api.getImage(currentImgName, filter).then((res: Image64 | null) => {
@@ -192,6 +195,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
                 alt="preview"
                 maxHeight="60vh"
                 maxWidth="90%"
+                onClick={()=>setLightboxOpen(true)}
               />
             )}
 
@@ -330,6 +334,11 @@ export const ImageDialog: React.FC<IImageDialog> = ({
           {alert}
         </Alert>
       </Snackbar>
+      <ImageLightbox
+        open={lightboxOpen}
+        imageSrc={file?.base64 || ''}
+        onClose={() => setLightboxOpen(false)}
+      />
     </>
   )
 }
