@@ -50,11 +50,11 @@ export const AddImages: React.FC<AddImagesProps> = ({ groupName, onBack, open, o
     load()
   }, [load])
 
-  const toggleSelect = (name: string) => {
+  const toggleSelect = (name: string): void => {
     setSelected((prev) => (prev.includes(name) ? prev.filter((i) => i !== name) : [...prev, name]))
   }
 
-  const handleAddToGroup = async () => {
+  const handleAddToGroup = async (): Promise<void> => {
     if (selected.length > 0) {
       await window.api.addImagesInGroup(groupName, selected)
       setSelected([])

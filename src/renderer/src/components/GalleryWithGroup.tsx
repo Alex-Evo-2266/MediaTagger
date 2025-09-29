@@ -65,7 +65,7 @@ export default function GalleryWithGroup(): JSX.Element {
     setSelected(null)
   }
 
-  const handleItemClick = (item: GalleryItem) => {
+  const handleItemClick = (item: GalleryItem): void => {
     if (item.type === 'group' && item.images.length > 0) {
       setSelected([item.images[0], item.name])
     } else if (item.type === 'image') {

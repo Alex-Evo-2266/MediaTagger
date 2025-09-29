@@ -93,11 +93,11 @@ export function rebuildTagsFile(
 
   try {
     const raw = fs.readFileSync(tagsPath, 'utf-8')
-    const data = JSON.parse(raw)
+    const data: TagsFileType = JSON.parse(raw)
 
-    const rebuilt: Record<string, any> = {}
+    const rebuilt: Record<string, TagData> = {}
 
-    for (const [fileName, entry] of Object.entries<any>(data)) {
+    for (const [fileName, entry] of Object.entries(data)) {
       const oldRelPath = entry.path // старый относительный путь (от imagesPathOld)
       const absOldPath = path.join(imagesPathOld, oldRelPath)
 

@@ -1,4 +1,4 @@
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd'
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import DeleteIcon from '@mui/icons-material/Delete'
 import {
   Box,
@@ -27,7 +27,7 @@ export const GroupPage: React.FC<GroupPageProps> = ({ groupName, onBack }) => {
     window.api.getGroup(groupName).then((res) => setImages(res))
   }, [groupName])
 
-  const handleDragEnd = (result: any) => {
+  const handleDragEnd = (result: DropResult<string>): void => {
     if (!result.destination) return
     const reordered = Array.from(images)
     const [moved] = reordered.splice(result.source.index, 1)
@@ -39,13 +39,13 @@ export const GroupPage: React.FC<GroupPageProps> = ({ groupName, onBack }) => {
     )
   }
 
-  const handleDeleteClick = (name: string, e?: React.MouseEvent) => {
+  const handleDeleteClick = (name: string, e?: React.MouseEvent): void => {
     e?.stopPropagation()
     setImageToDelete(name)
     setOpenDialog(true)
   }
 
-  const cancelDelete = () => {
+  const cancelDelete = (): void => {
     setImageToDelete(null)
     setOpenDialog(false)
   }

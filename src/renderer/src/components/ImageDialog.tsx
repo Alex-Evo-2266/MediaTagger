@@ -169,7 +169,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
       .catch((er) => console.error(er))
   }
 
-  const handleAddinGroup = () => {
+  const handleAddinGroup = (): void => {
     if (file) {
       window.api.addImageInGroup(groupName, file.name)
       setSelectGroup(false)

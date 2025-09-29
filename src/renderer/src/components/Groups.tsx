@@ -1,3 +1,4 @@
+import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
 import { PlusOne } from '@mui/icons-material'
 import CheckIcon from '@mui/icons-material/Check'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
@@ -21,15 +22,14 @@ import {
   DialogContent,
   TextField
 } from '@mui/material'
-import { useCallback, useEffect, useState } from 'react'
-import { DragDropContext, Droppable, Draggable, DropResult } from '@hello-pangea/dnd'
+import { JSX, useCallback, useEffect, useState } from 'react'
 
 import { GroupPage } from './Group'
 import { GroupPageScroll } from './GroupPageScroll'
 import { Preview } from './Prev'
 import { AddImages } from './selectFiles'
 
-export default function GroupsTable() {
+export default function GroupsTable(): JSX.Element {
   const [sequences, setSequences] = useState<Record<string, string[]>>({})
   const [openDialog, setOpenDialog] = useState(false)
   const [sequenceToDelete, setSequenceToDelete] = useState<string | null>(null)
@@ -50,12 +50,12 @@ export default function GroupsTable() {
     load()
   }, [load])
 
-  const handleDeleteClick = (name: string) => {
+  const handleDeleteClick = (name: string): void => {
     setSequenceToDelete(name)
     setOpenDialog(true)
   }
 
-  const cancelDelete = () => {
+  const cancelDelete = (): void => {
     setSequenceToDelete(null)
     setOpenDialog(false)
   }
@@ -72,16 +72,15 @@ export default function GroupsTable() {
     }
   }, [sequenceToDelete])
 
-  const handleAddGroup = () => {
-    window.api.addImagesInGroup(newGroupName, [])
-    .then(() => {
+  const handleAddGroup = (): void => {
+    window.api.addImagesInGroup(newGroupName, []).then(() => {
       setAddGroupDialog(false)
       load()
     })
   }
 
   // --- DND reorder ---
-  const onDragEnd = (result: DropResult) => {
+  const onDragEnd = (result: DropResult): void => {
     if (!result.destination) return
 
     const entries = Object.entries(sequences)

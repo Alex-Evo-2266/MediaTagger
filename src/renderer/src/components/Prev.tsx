@@ -13,7 +13,7 @@ export const Preview: React.FC<PreviewProps> = ({ name }) => {
     window.api.getImage(name).then((res: Image64 | null) => {
       if (res) setDataUrl(res?.base64)
     })
-  }, [])
+  }, [name])
 
   useEffect(() => {
     load()

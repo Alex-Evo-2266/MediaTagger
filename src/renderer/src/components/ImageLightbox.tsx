@@ -13,8 +13,8 @@ interface ImageLightboxProps {
 export const ImageLightbox: React.FC<ImageLightboxProps> = ({ open, imageSrc, onClose }) => {
   const [zoom, setZoom] = useState(1)
 
-  const handleZoomIn = () => setZoom((z) => Math.min(z + 0.2, 5))
-  const handleZoomOut = () => setZoom((z) => Math.max(z - 0.2, 1))
+  const handleZoomIn = (): void => setZoom((z) => Math.min(z + 0.2, 5))
+  const handleZoomOut = (): void => setZoom((z) => Math.max(z - 0.2, 1))
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xl" fullWidth>

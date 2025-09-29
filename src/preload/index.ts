@@ -35,6 +35,5 @@ contextBridge.exposeInMainWorld('api', {
   deleteGroup: (group: string) => ipcRenderer.invoke('delete-group', group),
   reorderInGroup: (group: string, images: string[]) =>
     ipcRenderer.invoke('reorder-in-group', group, images),
-  reorderGroup: (groups: string[]) =>
-    ipcRenderer.invoke('reorder-group', groups)
+  reorderGroup: (groups: string[]) => ipcRenderer.invoke('reorder-group', groups)
 })
