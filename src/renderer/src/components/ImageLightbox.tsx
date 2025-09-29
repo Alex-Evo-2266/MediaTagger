@@ -1,8 +1,8 @@
-import React, { useState } from 'react'
-import { Dialog, IconButton, Box } from '@mui/material'
 import CloseIcon from '@mui/icons-material/Close'
 import ZoomInIcon from '@mui/icons-material/ZoomIn'
 import ZoomOutIcon from '@mui/icons-material/ZoomOut'
+import { Dialog, IconButton, Box } from '@mui/material'
+import React, { useState } from 'react'
 
 interface ImageLightboxProps {
   open: boolean

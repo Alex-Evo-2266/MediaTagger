@@ -1,8 +1,9 @@
 import * as fs from 'fs'
 import * as path from 'path'
 
-import { TagData, TagsFileType } from './types'
 import { dialog } from 'electron'
+
+import { TagData, TagsFileType } from './types'
 
 export function getFileInTagsFile(baseDir: string, file: string): string {
   const fileName = path.relative(baseDir, file)
@@ -80,41 +81,44 @@ export function renameInFile(tagsPath: string, oldName: string, newName: string)
   return true
 }
 
-
-export function rebuildTagsFile(tagsPath: string, imagesPathOld: string, imagesPath: string): boolean {
+export function rebuildTagsFile(
+  tagsPath: string,
+  imagesPathOld: string,
+  imagesPath: string
+): boolean {
   if (!fs.existsSync(tagsPath)) {
-    dialog.showErrorBox("Ошибка", "Файл tags.json не найден");
-    return false;
+    dialog.showErrorBox('Ошибка', 'Файл tags.json не найден')
+    return false
   }
 
   try {
-    const raw = fs.readFileSync(tagsPath, "utf-8");
-    const data = JSON.parse(raw);
+    const raw = fs.readFileSync(tagsPath, 'utf-8')
+    const data = JSON.parse(raw)
 
-    const rebuilt: Record<string, any> = {};
+    const rebuilt: Record<string, any> = {}
 
     for (const [fileName, entry] of Object.entries<any>(data)) {
-      const oldRelPath = entry.path; // старый относительный путь (от imagesPathOld)
-      const absOldPath = path.join(imagesPathOld, oldRelPath);
+      const oldRelPath = entry.path // старый относительный путь (от imagesPathOld)
+      const absOldPath = path.join(imagesPathOld, oldRelPath)
 
       // получаем путь относительно новой папки
-      const newPath = path.relative(imagesPath, absOldPath);
+      const newPath = path.relative(imagesPath, absOldPath)
 
       rebuilt[fileName] = {
         ...entry,
-        path: newPath,
-      };
+        path: newPath
+      }
     }
 
-    fs.writeFileSync(tagsPath, JSON.stringify(rebuilt, null, 2), "utf-8");
+    fs.writeFileSync(tagsPath, JSON.stringify(rebuilt, null, 2), 'utf-8')
     dialog.showMessageBoxSync({
-      type: "info",
-      title: "Готово",
-      message: "tags.json успешно перестроен под новый формат",
-    });
+      type: 'info',
+      title: 'Готово',
+      message: 'tags.json успешно перестроен под новый формат'
+    })
     return true
   } catch (err) {
-    dialog.showErrorBox("Ошибка при перестроении", String(err));
+    dialog.showErrorBox('Ошибка при перестроении', String(err))
     return false
   }
 }

@@ -32,39 +32,39 @@ export async function getImagesFromFolderAll(
   folderPath: string,
   filter: Filter | undefined
 ): Promise<Image[]> {
-    const tagsFile = loadData(tagsPath)
-    const items = Object.entries(tagsFile)
+  const tagsFile = loadData(tagsPath)
+  const items = Object.entries(tagsFile)
 
-    const filtred: Image[] = items
-      .filter(([name, option]) => {
-        const containsAll =
-          filter === undefined
-            ? true
-            : filter.filter.tags.every((el) =>
-                option.tags.some((item) => item.toLowerCase() === el.toLowerCase())
-              )
-        return (
-          filter === undefined ||
-          (name.toLowerCase().includes(filter.search.toLowerCase()) && containsAll)
-        )
-      })
-      .map(([name, option]) => ({
-        name,
-        tags: option.tags,
-        path: option.path,
-        order: option.order,
-        fullPath: path.join(folderPath, option.path)
-      }))
+  const filtred: Image[] = items
+    .filter(([name, option]) => {
+      const containsAll =
+        filter === undefined
+          ? true
+          : filter.filter.tags.every((el) =>
+              option.tags.some((item) => item.toLowerCase() === el.toLowerCase())
+            )
+      return (
+        filter === undefined ||
+        (name.toLowerCase().includes(filter.search.toLowerCase()) && containsAll)
+      )
+    })
+    .map(([name, option]) => ({
+      name,
+      tags: option.tags,
+      path: option.path,
+      order: option.order,
+      fullPath: path.join(folderPath, option.path)
+    }))
 
-    const sorter =
-      filter && filter.filter.tags.length > 0
-        ? filtred.sort((a, b) => {
-            const orderA = a.order ?? '' // значение по умолчанию пустая строка
-            const orderB = b.order ?? ''
-            return orderA.localeCompare(orderB) // сравниваем строки
-          })
-        : filtred
-    return sorter
+  const sorter =
+    filter && filter.filter.tags.length > 0
+      ? filtred.sort((a, b) => {
+          const orderA = a.order ?? '' // значение по умолчанию пустая строка
+          const orderB = b.order ?? ''
+          return orderA.localeCompare(orderB) // сравниваем строки
+        })
+      : filtred
+  return sorter
 }
 
 export async function getImagesFromFolder(

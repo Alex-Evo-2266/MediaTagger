@@ -1,32 +1,33 @@
-import fs from "fs";
-import { getImage, getImagesFromFolderAll, imgbase64 } from "./load_img";
-import { GalleryItem, Image64, Image64WithGroup } from "../preload/types";
-import { Filter } from "./types";
-import { loadData } from "./tags";
+import fs from 'fs'
+
+import { getImage, getImagesFromFolderAll, imgbase64 } from './load_img'
+import { loadData } from './tags'
+import { Filter } from './types'
+import { GalleryItem, Image64, Image64WithGroup } from '../preload/types'
 
 export function loadSequences(sequencesPath: string): Record<string, string[]> {
-  if (!fs.existsSync(sequencesPath)) return {};
-  return JSON.parse(fs.readFileSync(sequencesPath, "utf-8"));
+  if (!fs.existsSync(sequencesPath)) return {}
+  return JSON.parse(fs.readFileSync(sequencesPath, 'utf-8'))
 }
 
 export function saveSequences(sequencesPath: string, sequences: Record<string, string[]>) {
-  fs.writeFileSync(sequencesPath, JSON.stringify(sequences, null, 2), "utf-8");
+  fs.writeFileSync(sequencesPath, JSON.stringify(sequences, null, 2), 'utf-8')
 }
 
 export function addToSequence(sequencesPath: string, seqName: string, imagePath: string) {
-  const sequences = loadSequences(sequencesPath);
-  if (!sequences[seqName]) sequences[seqName] = [];
+  const sequences = loadSequences(sequencesPath)
+  if (!sequences[seqName]) sequences[seqName] = []
   if (!sequences[seqName].includes(imagePath)) {
-    sequences[seqName].push(imagePath);
-    saveSequences(sequencesPath, sequences);
+    sequences[seqName].push(imagePath)
+    saveSequences(sequencesPath, sequences)
   }
 }
 
 export function removeFromSequence(sequencesPath: string, seqName: string, imagePath: string) {
-  const sequences = loadSequences(sequencesPath);
+  const sequences = loadSequences(sequencesPath)
   if (sequences[seqName]) {
-    sequences[seqName] = sequences[seqName].filter(p => p !== imagePath);
-    saveSequences(sequencesPath, sequences);
+    sequences[seqName] = sequences[seqName].filter((p) => p !== imagePath)
+    saveSequences(sequencesPath, sequences)
   }
 }
 
@@ -34,17 +35,17 @@ export function removeFromSequence(sequencesPath: string, seqName: string, image
  * Добавить несколько изображений в последовательность
  */
 export function addArrToSequence(sequencesPath: string, seqName: string, imagePaths: string[]) {
-  const sequences = loadSequences(sequencesPath);
-  if (!sequences[seqName]) sequences[seqName] = [];
+  const sequences = loadSequences(sequencesPath)
+  if (!sequences[seqName]) sequences[seqName] = []
 
   // добавляем только новые
-  imagePaths.forEach(img => {
+  imagePaths.forEach((img) => {
     if (!sequences[seqName].includes(img)) {
-      sequences[seqName].push(img);
+      sequences[seqName].push(img)
     }
-  });
+  })
 
-  saveSequences(sequencesPath, sequences);
+  saveSequences(sequencesPath, sequences)
 }
 
 /**
@@ -52,61 +53,57 @@ export function addArrToSequence(sequencesPath: string, seqName: string, imagePa
  * Передаём полностью новый массив
  */
 export function reorderSequence(sequencesPath: string, seqName: string, newOrder: string[]) {
-  const sequences = loadSequences(sequencesPath);
+  const sequences = loadSequences(sequencesPath)
   if (!sequences[seqName]) {
-    throw new Error(`Последовательность ${seqName} не найдена`);
+    throw new Error(`Последовательность ${seqName} не найдена`)
   }
 
   // фильтруем: оставляем только те, что реально есть в группе
-  const existing = sequences[seqName];
-  sequences[seqName] = newOrder.filter(img => existing.includes(img));
+  const existing = sequences[seqName]
+  sequences[seqName] = newOrder.filter((img) => existing.includes(img))
 
-  saveSequences(sequencesPath, sequences);
+  saveSequences(sequencesPath, sequences)
 }
 
 /**
  * Создать новую последовательность
  */
 export function createSequence(sequencesPath: string, seqName: string, imagePaths: string[] = []) {
-  const sequences = loadSequences(sequencesPath);
+  const sequences = loadSequences(sequencesPath)
   if (sequences[seqName]) {
-    throw new Error(`Последовательность ${seqName} уже существует`);
+    throw new Error(`Последовательность ${seqName} уже существует`)
   }
-  sequences[seqName] = [...new Set(imagePaths)];
-  saveSequences(sequencesPath, sequences);
+  sequences[seqName] = [...new Set(imagePaths)]
+  saveSequences(sequencesPath, sequences)
 }
 
 /**
  * Удалить последовательность
  */
 export function deleteSequence(sequencesPath: string, seqName: string) {
-  const sequences = loadSequences(sequencesPath);
-  delete sequences[seqName];
-  saveSequences(sequencesPath, sequences);
+  const sequences = loadSequences(sequencesPath)
+  delete sequences[seqName]
+  saveSequences(sequencesPath, sequences)
 }
 
 export async function getGroup(
-    tagsPath: string,
-    folderPath: string,
-    sequencesPath: string, 
-    seqName: string
-): Promise<Image64[]>{
-    const sequences = loadSequences(sequencesPath);
-    if (!sequences[seqName])
-        throw new Error(`Последовательность ${seqName} не найдена`);
-    const images = sequences[seqName]
-    const imagesParse: (Image64 | null)[] = []
-    for (const element of images) {
-        imagesParse.push(await getImage(tagsPath, folderPath, element) ) 
-    }
-    images.map(img => {
-        getImage(tagsPath, folderPath, img)
-    })
-    return imagesParse.filter((img): img is Image64 => img !== null);
+  tagsPath: string,
+  folderPath: string,
+  sequencesPath: string,
+  seqName: string
+): Promise<Image64[]> {
+  const sequences = loadSequences(sequencesPath)
+  if (!sequences[seqName]) throw new Error(`Последовательность ${seqName} не найдена`)
+  const images = sequences[seqName]
+  const imagesParse: (Image64 | null)[] = []
+  for (const element of images) {
+    imagesParse.push(await getImage(tagsPath, folderPath, element))
+  }
+  images.map((img) => {
+    getImage(tagsPath, folderPath, img)
+  })
+  return imagesParse.filter((img): img is Image64 => img !== null)
 }
-
-
-
 
 /**
  * Получить список для галереи: обычные изображения + группы
@@ -117,59 +114,58 @@ export async function getItemsWithGroup(
   sequencesPath: string,
   filter?: Filter
 ): Promise<GalleryItem[]> {
-  const sequences = loadSequences(sequencesPath);
+  const sequences = loadSequences(sequencesPath)
 
-  const groupedImages = new Set(Object.values(sequences).flatMap((seq) => seq));
+  const groupedImages = new Set(Object.values(sequences).flatMap((seq) => seq))
 
-  const groups: GalleryItem[] = [];
+  const groups: GalleryItem[] = []
   for (const [seqName, files] of Object.entries(sequences)) {
-    if (files.length === 0) continue;
+    if (files.length === 0) continue
 
     // Проверка фильтра
-    let matchSearch = true;
+    let matchSearch = true
     if (filter?.search) {
-      matchSearch = seqName.toLowerCase().includes(filter.search.toLowerCase());
+      matchSearch = seqName.toLowerCase().includes(filter.search.toLowerCase())
     }
 
-    let matchTags = true;
+    let matchTags = true
     if (filter && filter.filter.tags.length > 0) {
       // Проверяем: есть ли хотя бы один файл в группе с нужным тегом
-      const tagsFile = loadData(tagsPath);
+      const tagsFile = loadData(tagsPath)
       matchTags = files.some((fileName) => {
-        const fileData = tagsFile[fileName];
-        if (!fileData) return false;
+        const fileData = tagsFile[fileName]
+        if (!fileData) return false
         return filter.filter.tags.every((tag) =>
           fileData.tags.some((t) => t.toLowerCase() === tag.toLowerCase())
-        );
-      });
+        )
+      })
     }
 
-    if (!matchSearch || !matchTags) continue;
+    if (!matchSearch || !matchTags) continue
 
-    const first = await getImage(tagsPath, folderPath, files[0]);
+    const first = await getImage(tagsPath, folderPath, files[0])
     groups.push({
-      type: "group",
+      type: 'group',
       name: seqName,
       images: files,
-      preview: first,
-    });
+      preview: first
+    })
   }
 
   // 2. Загружаем одиночные картинки
-  const img = await getImagesFromFolderAll(tagsPath, folderPath, filter);
+  const img = await getImagesFromFolderAll(tagsPath, folderPath, filter)
   const images: GalleryItem[] = img
     .filter((image) => !groupedImages.has(image.name)) // убираем те, что в группах
     .map((image) => ({
-      type: "image",
-      ...image,
-    }));
+      type: 'image',
+      ...image
+    }))
 
   // 3. Объединяем
-  const allItems = [...groups, ...images];
+  const allItems = [...groups, ...images]
 
-  return allItems;
+  return allItems
 }
-
 
 export async function getGalleryItems(
   tagsPath: string,
@@ -179,15 +175,14 @@ export async function getGalleryItems(
   page: number = 0,
   pageSize: number = 10
 ): Promise<{ items: GalleryItem[]; pages: number }> {
-  const allItems = await getItemsWithGroup(tagsPath, folderPath, sequencesPath, filter);
+  const allItems = await getItemsWithGroup(tagsPath, folderPath, sequencesPath, filter)
 
-  const totalPages = Math.ceil(allItems.length / pageSize);
-  const start = page * pageSize;
-  const items = allItems.slice(start, start + pageSize);
+  const totalPages = Math.ceil(allItems.length / pageSize)
+  const start = page * pageSize
+  const items = allItems.slice(start, start + pageSize)
 
-  return { items, pages: totalPages };
+  return { items, pages: totalPages }
 }
-
 
 export async function getImageWhithGroup(
   tagsPath: string,
@@ -197,55 +192,50 @@ export async function getImageWhithGroup(
   filter?: Filter
 ): Promise<Image64WithGroup | null> {
   try {
-    const [fileName, groupName] = nameTuple;
+    const [fileName, groupName] = nameTuple
 
-    const items = await getItemsWithGroup(tagsPath, folderPath, sequencesPath, filter);
-
+    const items = await getItemsWithGroup(tagsPath, folderPath, sequencesPath, filter)
 
     // Создаём плоский список галереи
-    const flatList: { name: string; group?: string }[] = [];
+    const flatList: { name: string; group?: string }[] = []
 
-    const index = groupName?
-    items.findIndex((el)=>el.type === "group" && el.name === groupName):
-    items.findIndex((el)=>el.type === "image" && el.name === fileName)
-    if (index === -1)
-        return null
-    const prevIndex = index > 0? index - 1: undefined
-    const nextIndex = index < items.length - 1? index + 1: undefined
+    const index = groupName
+      ? items.findIndex((el) => el.type === 'group' && el.name === groupName)
+      : items.findIndex((el) => el.type === 'image' && el.name === fileName)
+    if (index === -1) return null
+    const prevIndex = index > 0 ? index - 1 : undefined
+    const nextIndex = index < items.length - 1 ? index + 1 : undefined
     const items_s = [items[index]]
-    if(prevIndex !== undefined)
-        items_s.unshift(items[prevIndex])
-    if(nextIndex !== undefined)
-        items_s.push(items[nextIndex])
-
+    if (prevIndex !== undefined) items_s.unshift(items[prevIndex])
+    if (nextIndex !== undefined) items_s.push(items[nextIndex])
 
     for (const item of items_s) {
-      if (item.type === "group") {
+      if (item.type === 'group') {
         for (const imgName of item.images) {
-          flatList.push({ name: imgName, group: item.name });
+          flatList.push({ name: imgName, group: item.name })
         }
       } else {
-        flatList.push({ name: item.name });
+        flatList.push({ name: item.name })
       }
     }
 
-    const currentIndex = flatList.findIndex(
-      (el) => el.name === fileName && el.group === groupName
-    );
+    const currentIndex = flatList.findIndex((el) => el.name === fileName && el.group === groupName)
 
-    if (currentIndex === -1) return null;
+    if (currentIndex === -1) return null
 
-    const prevItem = flatList[currentIndex - 1];
-    const nextItem = flatList[currentIndex + 1];
+    const prevItem = flatList[currentIndex - 1]
+    const nextItem = flatList[currentIndex + 1]
 
-    const data = await getImage(tagsPath, folderPath, fileName);
-    if (!data) return null;
+    const data = await getImage(tagsPath, folderPath, fileName)
+    if (!data) return null
 
-    const prev: [string, string?] | undefined =
-      prevItem ? [prevItem.name, prevItem.group] : undefined;
+    const prev: [string, string?] | undefined = prevItem
+      ? [prevItem.name, prevItem.group]
+      : undefined
 
-    const next: [string, string?] | undefined =
-      nextItem ? [nextItem.name, nextItem.group] : undefined;
+    const next: [string, string?] | undefined = nextItem
+      ? [nextItem.name, nextItem.group]
+      : undefined
 
     return {
       path: data.path,
@@ -256,10 +246,10 @@ export async function getImageWhithGroup(
       name: fileName,
       group: groupName,
       prev,
-      next,
-    };
+      next
+    }
   } catch (err) {
-    console.error("Ошибка при чтении файла:", err);
-    return null;
+    console.error('Ошибка при чтении файла:', err)
+    return null
   }
 }

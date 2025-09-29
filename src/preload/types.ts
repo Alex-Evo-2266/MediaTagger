@@ -57,13 +57,13 @@ export type Image64WithGroup = {
 }
 
 export type GalleryItem =
-  | ({ type: "image" } & Image)
-  | ({
-      type: "group";
-      name: string;              // имя группы
-      images: string[];          // список имён файлов
-      preview: Image | null;     // превьюшка
-    });
+  | ({ type: 'image' } & Image)
+  | {
+      type: 'group'
+      name: string // имя группы
+      images: string[] // список имён файлов
+      preview: Image | null // превьюшка
+    }
 
 export type Images = {
   imgs: Image[]

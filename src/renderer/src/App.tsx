@@ -3,8 +3,8 @@ import { JSX, useEffect, useState } from 'react'
 
 import Gallery from './components/Gallery'
 import GalleryNoTag from './components/GalleryNoTag'
-import GroupsTable from './components/Groups'
 import GalleryWithGroup from './components/GalleryWithGroup'
+import GroupsTable from './components/Groups'
 
 const darkTheme = createTheme({
   palette: {
@@ -21,7 +21,7 @@ const darkTheme = createTheme({
 })
 
 function App(): JSX.Element {
-  const [page, setPage] = useState("withGroup")
+  const [page, setPage] = useState('withGroup')
 
   useEffect(() => {
     window.api.onNavigate((page) => {
@@ -31,18 +31,18 @@ function App(): JSX.Element {
 
   return (
     <ThemeProvider theme={darkTheme}>
-      {
-      page === "notag" ? 
-      <GalleryNoTag /> : 
-      page === "groups" ?
-      <GroupsTable /> :
-      page === "withGroup" ?
-      <GalleryWithGroup /> :
-      page === "all"?
-      <Gallery />:
-      <GalleryWithGroup />
-      }
-      </ThemeProvider>
+      {page === 'notag' ? (
+        <GalleryNoTag />
+      ) : page === 'groups' ? (
+        <GroupsTable />
+      ) : page === 'withGroup' ? (
+        <GalleryWithGroup />
+      ) : page === 'all' ? (
+        <Gallery />
+      ) : (
+        <GalleryWithGroup />
+      )}
+    </ThemeProvider>
   )
 }
 

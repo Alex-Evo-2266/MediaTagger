@@ -1,72 +1,87 @@
-import { useCallback, useEffect, useState } from "react";
+import { PlusOne } from '@mui/icons-material'
+import DeleteIcon from '@mui/icons-material/Delete'
+import EditIcon from '@mui/icons-material/Edit'
 import {
-  Table, TableBody, TableCell, TableContainer,
-  TableHead, TableRow, Paper, Avatar,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+  Avatar,
   Box,
   Dialog,
   DialogTitle,
   DialogActions,
   Button,
-  IconButton
-} from "@mui/material";
-import DeleteIcon from "@mui/icons-material/Delete";
-import EditIcon from "@mui/icons-material/Edit";
-import { Preview } from "./Prev";
-import { GroupPage } from "./Group";
-import { GroupPageScroll } from "./GroupPageScroll";
-import { AddImages } from "./selectFiles";
-import { PlusOne } from "@mui/icons-material";
+  IconButton,
+  DialogContent,
+  TextField
+} from '@mui/material'
+import { useCallback, useEffect, useState } from 'react'
 
+import { GroupPage } from './Group'
+import { GroupPageScroll } from './GroupPageScroll'
+import { Preview } from './Prev'
+import { AddImages } from './selectFiles'
 
 export default function GroupsTable() {
-    const [sequences, setSequences] = useState<Record<string, string[]>>({});
-    const [openDialog, setOpenDialog] = useState(false);
-    const [sequenceToDelete, setSequenceToDelete] = useState<string | null>(null);
-    const [selectGroup, setSelectGroup] = useState<string | null>(null) 
-    const [editGroup, seteditGroup] = useState<string | null>(null) 
-    const [addImagesDialog, setAddImagesDialog] = useState<string | null>(null) 
+  const [sequences, setSequences] = useState<Record<string, string[]>>({})
+  const [openDialog, setOpenDialog] = useState(false)
+  const [sequenceToDelete, setSequenceToDelete] = useState<string | null>(null)
+  const [selectGroup, setSelectGroup] = useState<string | null>(null)
+  const [editGroup, seteditGroup] = useState<string | null>(null)
+  const [addImagesDialog, setAddImagesDialog] = useState<string | null>(null)
+  const [addGroupDialog, setAddGroupDialog] = useState<boolean>(false)
+  const [newGroupName, setNewGroupName] = useState<string>('')
 
-    const load = useCallback(()=>{
-      window.api.getGroups().then(res=>{
-        setSequences(res)
-      })
-    },[])
+  const load = useCallback(() => {
+    window.api.getGroups().then((res) => {
+      setSequences(res)
+    })
+  }, [])
 
   useEffect(() => {
     load()
-  }, [load]);
+  }, [load])
 
   const handleDeleteClick = (name: string) => {
-    setSequenceToDelete(name);
-    setOpenDialog(true);
-  };
+    setSequenceToDelete(name)
+    setOpenDialog(true)
+  }
 
-    const cancelDelete = () => {
-        setSequenceToDelete(null);
-        setOpenDialog(false);
-    };
+  const cancelDelete = () => {
+    setSequenceToDelete(null)
+    setOpenDialog(false)
+  }
 
   const deleteSequence = useCallback(() => {
-    if(sequenceToDelete)
-    {
-        window.api.deleteGroup(sequenceToDelete)
-        .then(()=>window.api.getGroups())
-        .then(res=>{
-            setSequences(res)
-            cancelDelete()
+    if (sequenceToDelete) {
+      window.api
+        .deleteGroup(sequenceToDelete)
+        .then(() => window.api.getGroups())
+        .then((res) => {
+          setSequences(res)
+          cancelDelete()
         })
     }
-  },[sequenceToDelete])
+  }, [sequenceToDelete])
 
-  if(editGroup !== null)
-    return <GroupPage groupName={editGroup} onBack={()=>seteditGroup(null)}/>
+  const handleAddGroup = () => {
+    window.api.addImagesInGroup(newGroupName, []).then(() => setAddGroupDialog(false))
+  }
 
-  if(selectGroup !== null)
-    return <GroupPageScroll groupName={selectGroup} onBack={()=>setSelectGroup(null)}/>
+  if (editGroup !== null)
+    return <GroupPage groupName={editGroup} onBack={() => seteditGroup(null)} />
+
+  if (selectGroup !== null)
+    return <GroupPageScroll groupName={selectGroup} onBack={() => setSelectGroup(null)} />
 
   return (
-    <Box sx={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
-      <TableContainer component={Paper} sx={{ width: "100%", height: "100%", overflow: "auto" }}>
+    <Box sx={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
+      <Button onClick={() => setAddGroupDialog(true)}>Создать группу</Button>
+      <TableContainer component={Paper} sx={{ width: '100%', height: '90%', overflow: 'auto' }}>
         <Table stickyHeader>
           <TableHead>
             <TableRow>
@@ -88,14 +103,22 @@ export default function GroupsTable() {
                     </Avatar>
                   )}
                 </TableCell>
-                <TableCell>{name}</TableCell>
+                <TableCell
+                  sx={{ cursor: 'pointer', userSelect: 'none' }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    navigator.clipboard.writeText(name)
+                  }}
+                >
+                  {name}
+                </TableCell>
                 <TableCell>{images.length}</TableCell>
                 <TableCell>
                   <IconButton
                     color="default"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      seteditGroup(name);
+                      e.stopPropagation()
+                      seteditGroup(name)
                     }}
                   >
                     <EditIcon />
@@ -103,8 +126,8 @@ export default function GroupsTable() {
                   <IconButton
                     color="default"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      setAddImagesDialog(name);
+                      e.stopPropagation()
+                      setAddImagesDialog(name)
                     }}
                   >
                     <PlusOne />
@@ -112,8 +135,8 @@ export default function GroupsTable() {
                   <IconButton
                     color="error"
                     onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteClick(name);
+                      e.stopPropagation()
+                      handleDeleteClick(name)
                     }}
                   >
                     <DeleteIcon />
@@ -135,13 +158,34 @@ export default function GroupsTable() {
         </DialogActions>
       </Dialog>
 
+      <Dialog
+        open={addGroupDialog}
+        onClose={() => setAddGroupDialog(false)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Создание группы</DialogTitle>
+        <DialogContent>
+          <Box display="flex" gap={1} mt={1}>
+            <TextField
+              fullWidth
+              label="группы"
+              value={newGroupName}
+              onChange={(e) => setNewGroupName(e.target.value)}
+            />
+            <Button variant="outlined" onClick={handleAddGroup}>
+              Создать
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
       <AddImages
         onBack={() => setAddImagesDialog(null)}
         open={addImagesDialog !== null}
-        groupName={addImagesDialog ?? ""}
+        groupName={addImagesDialog ?? ''}
         onReload={load}
       />
     </Box>
-
-  );
+  )
 }

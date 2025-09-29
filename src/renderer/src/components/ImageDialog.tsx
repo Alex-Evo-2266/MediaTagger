@@ -170,8 +170,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
   }
 
   const handleAddinGroup = () => {
-    if(file)
-    {
+    if (file) {
       window.api.addImageInGroup(groupName, file.name)
       setSelectGroup(false)
     }
@@ -194,7 +193,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
                 alt="preview"
                 maxHeight="60vh"
                 maxWidth="90%"
-                onClick={()=>setLightboxOpen(true)}
+                onClick={() => setLightboxOpen(true)}
               />
             )}
 
@@ -247,7 +246,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
 
           {editing && (
             <Box display="flex" gap={1} mb={2}>
-              <Button onClick={()=>setSelectGroup(true)}>добавить в группу</Button>
+              <Button onClick={() => setSelectGroup(true)}>добавить в группу</Button>
             </Box>
           )}
 
@@ -306,12 +305,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
         </DialogContent>
       </Dialog>
 
-      <Dialog
-        open={selectGroup}
-        onClose={() => setSelectGroup(false)}
-        maxWidth="sm"
-        fullWidth
-      >
+      <Dialog open={selectGroup} onClose={() => setSelectGroup(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Выбор группы</DialogTitle>
         <DialogContent>
           <Box display="flex" gap={1} mt={1}>

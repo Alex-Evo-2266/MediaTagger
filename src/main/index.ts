@@ -4,6 +4,16 @@ import * as path from 'path'
 import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron'
 
 import {
+  addArrToSequence,
+  deleteSequence,
+  getGalleryItems,
+  getGroup,
+  getImageWhithGroup,
+  loadSequences,
+  removeFromSequence,
+  reorderSequence
+} from './group'
+import {
   deleteImage,
   getImage,
   getImagesFromFolder,
@@ -14,7 +24,6 @@ import {
 import { syncTagsWithFiles } from './sinhron'
 import { createTags, renameInFile, saveTags } from './tags'
 import { Filter, Images } from './types'
-import { addArrToSequence, deleteSequence, getGalleryItems, getGroup, getImageWhithGroup, loadSequences, removeFromSequence, reorderSequence } from './group'
 import { ImagesWithGroup } from '../preload/types'
 
 let mainWindow: BrowserWindow | null = null
@@ -129,7 +138,7 @@ function createWindow(): void {
               checked: false,
               click: () => {
                 if (!mainWindow) return
-                mainWindow.webContents.send('navigate', "all")
+                mainWindow.webContents.send('navigate', 'all')
               }
             },
             {
@@ -138,7 +147,7 @@ function createWindow(): void {
               checked: false,
               click: () => {
                 if (!mainWindow) return
-                mainWindow.webContents.send('navigate', "notag")
+                mainWindow.webContents.send('navigate', 'notag')
               }
             },
             {
@@ -147,7 +156,7 @@ function createWindow(): void {
               checked: false,
               click: () => {
                 if (!mainWindow) return
-                mainWindow.webContents.send('navigate', "groups")
+                mainWindow.webContents.send('navigate', 'groups')
               }
             },
             {
@@ -156,7 +165,7 @@ function createWindow(): void {
               checked: true,
               click: () => {
                 if (!mainWindow) return
-                mainWindow.webContents.send('navigate', "withGroup")
+                mainWindow.webContents.send('navigate', 'withGroup')
               }
             }
           ]
@@ -309,16 +318,19 @@ ipcMain.handle('reorder-group', async (_event, group: string, images: string[]) 
   return await reorderSequence(groupPath, group, images)
 })
 
-ipcMain.handle('load-image-with-group', async (_, filters: Filter, page: number = 0): Promise<ImagesWithGroup> => {
-  const data = await getGalleryItems(tagsPath, imagesPath, groupPath, filters, page, IMG_IN_PAGE)
-  return {
-    imgs: data.items,
-    page: page + 1,
-    next_img: page + 20,
-    pages: data.pages,
-    imgInPage: IMG_IN_PAGE
+ipcMain.handle(
+  'load-image-with-group',
+  async (_, filters: Filter, page: number = 0): Promise<ImagesWithGroup> => {
+    const data = await getGalleryItems(tagsPath, imagesPath, groupPath, filters, page, IMG_IN_PAGE)
+    return {
+      imgs: data.items,
+      page: page + 1,
+      next_img: page + 20,
+      pages: data.pages,
+      imgInPage: IMG_IN_PAGE
+    }
   }
-})
+)
 
 ipcMain.handle('get-image-with-group', async (_event, name: [string, string?], filter: Filter) => {
   const data = await getImageWhithGroup(tagsPath, imagesPath, name, groupPath, filter)

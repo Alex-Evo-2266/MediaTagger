@@ -1,68 +1,77 @@
-import { Pagination, Box, TextField, Stack, Chip, Typography, Card, CardContent } from "@mui/material";
-import Grid from "@mui/material/Grid";
-import { JSX, useCallback, useEffect, useState } from "react";
+import {
+  Pagination,
+  Box,
+  TextField,
+  Stack,
+  Chip,
+  Typography,
+  Card,
+  CardContent
+} from '@mui/material'
+import Grid from '@mui/material/Grid'
+import { JSX, useCallback, useEffect, useState } from 'react'
+import { GalleryItem, ImagesWithGroup } from 'src/preload/types'
 
-import { GalleryItem, ImagesWithGroup } from "src/preload/types";
-import { Content } from "./ItemGallery";
-import { ImageDialogWithGroup } from "./ImageDialogWithGroup";
+import { ImageDialogWithGroup } from './ImageDialogWithGroup'
+import { Content } from './ItemGallery'
 
 export default function GalleryWithGroup(): JSX.Element {
-  const [page, setPage] = useState<number>(0);
-  const [pages, setPages] = useState<number>(1);
-  const [items, setItems] = useState<GalleryItem[]>([]);
-  const [selected, setSelected] = useState<[string, string?] | null>(null);
-  const [tagInput, setTagInput] = useState<string>("");
-  const [search, setSearch] = useState<string>("");
-  const [tags, setTags] = useState<string[]>([]);
+  const [page, setPage] = useState<number>(0)
+  const [pages, setPages] = useState<number>(1)
+  const [items, setItems] = useState<GalleryItem[]>([])
+  const [selected, setSelected] = useState<[string, string?] | null>(null)
+  const [tagInput, setTagInput] = useState<string>('')
+  const [search, setSearch] = useState<string>('')
+  const [tags, setTags] = useState<string[]>([])
 
   const load = useCallback(() => {
     window.api
-      .loadImageWithGroup({ filter: {tags}, search }, page)
+      .loadImageWithGroup({ filter: { tags }, search }, page)
       .then((res: ImagesWithGroup) => {
-        setItems(res.imgs);
-        setPages(res.pages);
-      });
-  }, [page, tags, search]);
+        setItems(res.imgs)
+        setPages(res.pages)
+      })
+  }, [page, tags, search])
 
   useEffect(() => {
-    load();
+    load()
     window.api.onTagsUpdated((updated) => {
-      if (updated) load();
-    });
-  }, [load]);
+      if (updated) load()
+    })
+  }, [load])
 
   // Добавление тега
   const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === "Enter" && tagInput.trim() !== "") {
-      e.preventDefault();
+    if (e.key === 'Enter' && tagInput.trim() !== '') {
+      e.preventDefault()
       if (!tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()]);
+        setTags([...tags, tagInput.trim()])
       }
-      setTagInput("");
+      setTagInput('')
     }
-  };
+  }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
-    setSearch(e.target.value);
-  };
+    setSearch(e.target.value)
+  }
 
   const handleDeleteTag = (tagToDelete: string): void => {
-    setTags(tags.filter((tag) => tag !== tagToDelete));
-  };
+    setTags(tags.filter((tag) => tag !== tagToDelete))
+  }
 
   const tagClick = (tag: string): void => {
-    setSearch("");
-    setTags([tag]);
-    setSelected(null);
-  };
+    setSearch('')
+    setTags([tag])
+    setSelected(null)
+  }
 
   const handleItemClick = (item: GalleryItem) => {
-    if (item.type === "group" && item.images.length > 0) {
-      setSelected([item.images[0], item.name]);
-    } else if (item.type === "image") {
-      setSelected([item.name]);
+    if (item.type === 'group' && item.images.length > 0) {
+      setSelected([item.images[0], item.name])
+    } else if (item.type === 'image') {
+      setSelected([item.name])
     }
-  };
+  }
 
   return (
     <Box p={2} display="flex" flexDirection="column" height="100vh">
@@ -100,11 +109,11 @@ export default function GalleryWithGroup(): JSX.Element {
       <Box flex={1} overflow="auto" pr={1}>
         <Grid container spacing={2}>
           {items.map((item) => (
-            <Grid key={item.type === "image" ? item.name : item.name}>
-              {item.type === "group" ? (
-                <Card onClick={() => handleItemClick(item, )} sx={{ cursor: "pointer" }}>
+            <Grid key={item.type === 'image' ? item.name : item.name}>
+              {item.type === 'group' ? (
+                <Card onClick={() => handleItemClick(item)} sx={{ cursor: 'pointer' }}>
                   {item.preview && (
-                    <Content file={item.preview} onClick={() => {}}/>
+                    <Content file={item.preview} onClick={() => {}} />
                     // <CardMedia component="img" height="140" image={item.preview.base64} alt={item.name} />
                   )}
                   <CardContent>
@@ -115,7 +124,7 @@ export default function GalleryWithGroup(): JSX.Element {
                   </CardContent>
                 </Card>
               ) : (
-                <Content file={item} onClick={() => handleItemClick(item)}/>
+                <Content file={item} onClick={() => handleItemClick(item)} />
               )}
             </Grid>
           ))}
@@ -138,8 +147,8 @@ export default function GalleryWithGroup(): JSX.Element {
       {selected && (
         <ImageDialogWithGroup
           open={selected !== null}
-          filter={{ filter: { tags }, search: "" }}
-          name={selected[0] ?? ""}
+          filter={{ filter: { tags }, search: '' }}
+          name={selected[0] ?? ''}
           group={selected[1]}
           onClose={() => setSelected(null)}
           reload={load}
@@ -147,5 +156,5 @@ export default function GalleryWithGroup(): JSX.Element {
         />
       )}
     </Box>
-  );
+  )
 }
