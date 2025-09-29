@@ -65,66 +65,83 @@ export default function GroupsTable() {
     return <GroupPageScroll groupName={selectGroup} onBack={()=>setSelectGroup(null)}/>
 
   return (
-    <Box sx={{ width: "100vw"}}>
-        <TableContainer component={Paper} sx={{width: "100%"}}>
-        <Table>
-            <TableHead>
+    <Box sx={{ width: "100vw", height: "100vh", overflow: "hidden" }}>
+      <TableContainer component={Paper} sx={{ width: "100%", height: "100%", overflow: "auto" }}>
+        <Table stickyHeader>
+          <TableHead>
             <TableRow>
-                <TableCell>Превью</TableCell>
-                <TableCell>Название группы</TableCell>
-                <TableCell>Количество изображений</TableCell>
-                <TableCell>Действия</TableCell>
+              <TableCell>Превью</TableCell>
+              <TableCell>Название группы</TableCell>
+              <TableCell>Количество изображений</TableCell>
+              <TableCell>Действия</TableCell>
             </TableRow>
-            </TableHead>
-            <TableBody>
+          </TableHead>
+          <TableBody>
             {Object.entries(sequences).map(([name, images]) => (
-                <TableRow key={name} hover onClick={()=>setSelectGroup(name)}>
+              <TableRow key={name} hover onClick={() => setSelectGroup(name)}>
                 <TableCell>
-                    {images.length > 0 ? (
-                    <Preview name={images[0]}/>
-                    ) : (
+                  {images.length > 0 ? (
+                    <Preview name={images[0]} />
+                  ) : (
                     <Avatar variant="square" sx={{ width: 64, height: 64 }}>
-                        ?
+                      ?
                     </Avatar>
-                    )}
+                  )}
                 </TableCell>
                 <TableCell>{name}</TableCell>
                 <TableCell>{images.length}</TableCell>
                 <TableCell>
-                  <IconButton color='default' onClick={(e) => {
+                  <IconButton
+                    color="default"
+                    onClick={(e) => {
                       e.stopPropagation();
                       seteditGroup(name);
                     }}
                   >
                     <EditIcon />
                   </IconButton>
-                  <IconButton color='default' onClick={(e) => {
-                    e.stopPropagation();
-                    setAddImagesDialog(name);
-                  }}>
+                  <IconButton
+                    color="default"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAddImagesDialog(name);
+                    }}
+                  >
                     <PlusOne />
                   </IconButton>
-                  <IconButton color="error" onClick={(e) => {
+                  <IconButton
+                    color="error"
+                    onClick={(e) => {
                       e.stopPropagation();
                       handleDeleteClick(name);
-                    }}>
+                    }}
+                  >
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
-                </TableRow>
+              </TableRow>
             ))}
-            </TableBody>
+          </TableBody>
         </Table>
-        </TableContainer>
-        {/* Диалог подтверждения */}
+      </TableContainer>
+
       <Dialog open={openDialog} onClose={cancelDelete}>
         <DialogTitle>Подтвердите удаление группы</DialogTitle>
         <DialogActions>
           <Button onClick={cancelDelete}>Отмена</Button>
-          <Button color="error" onClick={deleteSequence}>Удалить</Button>
+          <Button color="error" onClick={deleteSequence}>
+            Удалить
+          </Button>
         </DialogActions>
       </Dialog>
-      <AddImages onBack={()=>setAddImagesDialog(null)} open={addImagesDialog !== null} groupName={addImagesDialog ?? ""} onReload={load}/>
+
+      <AddImages
+        onBack={() => setAddImagesDialog(null)}
+        open={addImagesDialog !== null}
+        groupName={addImagesDialog ?? ""}
+        onReload={load}
+      />
     </Box>
+
   );
 }

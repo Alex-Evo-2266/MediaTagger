@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 import DeleteIcon from "@mui/icons-material/Delete";
-import { Box, Button, Dialog, DialogActions, DialogTitle, IconButton, Paper } from "@mui/material";
+import { Box, Button, Dialog, DialogActions, DialogTitle, IconButton, Paper, Typography } from "@mui/material";
 import { Image64 } from "src/preload/types";
 
 interface GroupPageProps {
@@ -81,9 +81,9 @@ export const GroupPage: React.FC<GroupPageProps> = ({ groupName, onBack }) => {
                       {...provided.dragHandleProps}
                       style={{
                         ...provided.draggableProps.style,
-                        flex: "0 0 auto",   // фиксируем ширину, не даём сжиматься
-                        width: 150,
-                        height: 150,
+                        flex: "0 0 auto",
+                        width: 250,
+                        height: 250,
                       }}
                       sx={{
                         position: "relative",
@@ -104,6 +104,8 @@ export const GroupPage: React.FC<GroupPageProps> = ({ groupName, onBack }) => {
                           display: "block",
                         }}
                       />
+                      
+                      {/* Кнопка удаления */}
                       <IconButton
                         size="small"
                         sx={{
@@ -117,7 +119,26 @@ export const GroupPage: React.FC<GroupPageProps> = ({ groupName, onBack }) => {
                       >
                         <DeleteIcon fontSize="small" />
                       </IconButton>
+
+                      {/* Подпись */}
+                      <Box
+                        sx={{
+                          position: "absolute",
+                          bottom: 0,
+                          width: "100%",
+                          bgcolor: "rgba(0, 0, 0, 0.5)",
+                          color: "#fff",
+                          p: 0.5,
+                          textAlign: "center",
+                          wordBreak: "break-all",
+                        }}
+                      >
+                        <Typography variant="body2">
+                          {img.name}
+                        </Typography>
+                      </Box>
                     </Paper>
+
                   )}
                 </Draggable>
               ))}
