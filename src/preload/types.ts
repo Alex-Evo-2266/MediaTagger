@@ -80,3 +80,8 @@ export type ImagesWithGroup = {
   pages: number
   imgInPage: number
 }
+
+export type GroupInFile = {
+  order: string[]
+  groups: Record<string, string[]>
+}

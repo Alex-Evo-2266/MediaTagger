@@ -33,7 +33,7 @@ export const GroupPage: React.FC<GroupPageProps> = ({ groupName, onBack }) => {
     const [moved] = reordered.splice(result.source.index, 1)
     reordered.splice(result.destination.index, 0, moved)
     setImages(reordered)
-    window.api.reorderGroup(
+    window.api.reorderInGroup(
       groupName,
       reordered.map((i) => i.name)
     )

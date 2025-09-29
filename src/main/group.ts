@@ -3,31 +3,50 @@ import fs from 'fs'
 import { getImage, getImagesFromFolderAll, imgbase64 } from './load_img'
 import { loadData } from './tags'
 import { Filter } from './types'
-import { GalleryItem, Image64, Image64WithGroup } from '../preload/types'
+import { GalleryItem, GroupInFile, Image64, Image64WithGroup } from '../preload/types'
 
-export function loadSequences(sequencesPath: string): Record<string, string[]> {
-  if (!fs.existsSync(sequencesPath)) return {}
-  return JSON.parse(fs.readFileSync(sequencesPath, 'utf-8'))
+function loadSequences(sequencesPath: string): GroupInFile {
+  if (!fs.existsSync(sequencesPath)) return { order: [], groups: {} }
+  const data = JSON.parse(fs.readFileSync(sequencesPath, 'utf-8'))
+  if ("order" in data && "groups" in data)
+    return data
+  return { order: [], groups: {} }
 }
 
-export function saveSequences(sequencesPath: string, sequences: Record<string, string[]>) {
-  fs.writeFileSync(sequencesPath, JSON.stringify(sequences, null, 2), 'utf-8')
+export function getAllGroups(sequencesPath: string):Record<string, string[]>
+{
+  const data = loadSequences(sequencesPath)
+  const out: Record<string, string[]> = {}
+  data.order.forEach(name=>{
+    out[name] = data.groups[name]
+  })
+  return out
+}
+
+export function saveSequences(sequencesPath: string, sequences: Record<string, string[]>, order: string[]) {
+  fs.writeFileSync(sequencesPath, JSON.stringify({order, groups: sequences}, null, 2), 'utf-8')
 }
 
 export function addToSequence(sequencesPath: string, seqName: string, imagePath: string) {
-  const sequences = loadSequences(sequencesPath)
-  if (!sequences[seqName]) sequences[seqName] = []
+  const fileData = loadSequences(sequencesPath)
+  const sequences = fileData.groups
+  const order = fileData.order
+  if (!sequences[seqName]){
+    sequences[seqName] = []
+    if(!order.includes(seqName))
+      order.push(seqName)
+  } 
   if (!sequences[seqName].includes(imagePath)) {
     sequences[seqName].push(imagePath)
-    saveSequences(sequencesPath, sequences)
+    saveSequences(sequencesPath, sequences, order)
   }
 }
 
 export function removeFromSequence(sequencesPath: string, seqName: string, imagePath: string) {
-  const sequences = loadSequences(sequencesPath)
-  if (sequences[seqName]) {
-    sequences[seqName] = sequences[seqName].filter((p) => p !== imagePath)
-    saveSequences(sequencesPath, sequences)
+  const {groups, order} = loadSequences(sequencesPath)
+  if (groups[seqName]) {
+    groups[seqName] = groups[seqName].filter((p) => p !== imagePath)
+    saveSequences(sequencesPath, groups, order)
   }
 }
 
@@ -35,17 +54,21 @@ export function removeFromSequence(sequencesPath: string, seqName: string, image
  * Добавить несколько изображений в последовательность
  */
 export function addArrToSequence(sequencesPath: string, seqName: string, imagePaths: string[]) {
-  const sequences = loadSequences(sequencesPath)
-  if (!sequences[seqName]) sequences[seqName] = []
+  const {groups, order} = loadSequences(sequencesPath)
+  if (!groups[seqName]){
+    groups[seqName] = []
+    if(!order.includes(seqName))
+      order.push(seqName)
+  } 
 
   // добавляем только новые
   imagePaths.forEach((img) => {
-    if (!sequences[seqName].includes(img)) {
-      sequences[seqName].push(img)
+    if (!groups[seqName].includes(img)) {
+      groups[seqName].push(img)
     }
   })
 
-  saveSequences(sequencesPath, sequences)
+  saveSequences(sequencesPath, groups, order)
 }
 
 /**
@@ -53,16 +76,16 @@ export function addArrToSequence(sequencesPath: string, seqName: string, imagePa
  * Передаём полностью новый массив
  */
 export function reorderSequence(sequencesPath: string, seqName: string, newOrder: string[]) {
-  const sequences = loadSequences(sequencesPath)
-  if (!sequences[seqName]) {
+  const {groups, order} = loadSequences(sequencesPath)
+  if (!groups[seqName]) {
     throw new Error(`Последовательность ${seqName} не найдена`)
   }
 
   // фильтруем: оставляем только те, что реально есть в группе
-  const existing = sequences[seqName]
-  sequences[seqName] = newOrder.filter((img) => existing.includes(img))
+  const existing = groups[seqName]
+  groups[seqName] = newOrder.filter((img) => existing.includes(img))
 
-  saveSequences(sequencesPath, sequences)
+  saveSequences(sequencesPath, groups, order)
 }
 
 /**
@@ -70,11 +93,12 @@ export function reorderSequence(sequencesPath: string, seqName: string, newOrder
  */
 export function createSequence(sequencesPath: string, seqName: string, imagePaths: string[] = []) {
   const sequences = loadSequences(sequencesPath)
-  if (sequences[seqName]) {
+  if (sequences.groups[seqName]) {
     throw new Error(`Последовательность ${seqName} уже существует`)
   }
-  sequences[seqName] = [...new Set(imagePaths)]
-  saveSequences(sequencesPath, sequences)
+  sequences.groups[seqName] = [...new Set(imagePaths)]
+  sequences.order.push(seqName) 
+  saveSequences(sequencesPath, sequences.groups, sequences.order)
 }
 
 /**
@@ -82,8 +106,23 @@ export function createSequence(sequencesPath: string, seqName: string, imagePath
  */
 export function deleteSequence(sequencesPath: string, seqName: string) {
   const sequences = loadSequences(sequencesPath)
-  delete sequences[seqName]
-  saveSequences(sequencesPath, sequences)
+  delete sequences.groups[seqName]
+  sequences.order = sequences.order.filter((name) => name !== seqName)
+  saveSequences(sequencesPath, sequences.groups, sequences.order)
+}
+
+export function reorderGroups(sequencesPath: string, newOrder: string[]) {
+  const sequences = loadSequences(sequencesPath)
+
+  // оставляем только те, которые реально есть
+  sequences.order = newOrder.filter((name) => sequences.groups[name])
+  for (const item in sequences.groups)
+  {
+    if(!sequences.order.includes(item))
+      sequences.order.push(item)
+  }
+
+  saveSequences(sequencesPath, sequences.groups, sequences.order)
 }
 
 export async function getGroup(
@@ -92,9 +131,9 @@ export async function getGroup(
   sequencesPath: string,
   seqName: string
 ): Promise<Image64[]> {
-  const sequences = loadSequences(sequencesPath)
-  if (!sequences[seqName]) throw new Error(`Последовательность ${seqName} не найдена`)
-  const images = sequences[seqName]
+  const {groups} = loadSequences(sequencesPath)
+  if (!groups[seqName]) throw new Error(`Последовательность ${seqName} не найдена`)
+  const images = groups[seqName]
   const imagesParse: (Image64 | null)[] = []
   for (const element of images) {
     imagesParse.push(await getImage(tagsPath, folderPath, element))
@@ -114,12 +153,13 @@ export async function getItemsWithGroup(
   sequencesPath: string,
   filter?: Filter
 ): Promise<GalleryItem[]> {
-  const sequences = loadSequences(sequencesPath)
+  const {groups: sequences, order} = loadSequences(sequencesPath)
 
   const groupedImages = new Set(Object.values(sequences).flatMap((seq) => seq))
 
   const groups: GalleryItem[] = []
-  for (const [seqName, files] of Object.entries(sequences)) {
+  const data: [string, string[]][] = order.map((name) => [name, sequences[name]])
+  for (const [seqName, files] of data) {
     if (files.length === 0) continue
 
     // Проверка фильтра

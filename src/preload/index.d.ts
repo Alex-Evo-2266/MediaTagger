@@ -19,10 +19,11 @@ interface API {
   getGroups: () => Promise<Record<string, string[]>>
   getGroup: (group: string) => Promise<Image64[]>
   deleteGroup: (group: string) => Promise<void>
-  reorderGroup: (group: string, images: string[]) => Promise<void>
+  reorderInGroup: (group: string, images: string[]) => Promise<void>
   loadImageWithGroup: (filter: Filter, page?: number) => Promise<ImagesWithGroup>
   getImageWithGroup: (name: [string, string?], filter?: Filter) => Promise<Image64WithGroup | null>
   addImagesInGroup: (group: string, nameImages: string[]) => Promise<void>
+  reorderGroup: (groups: string[]) => Promise<void>
 }
 
 declare global {

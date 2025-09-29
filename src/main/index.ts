@@ -9,8 +9,9 @@ import {
   getGalleryItems,
   getGroup,
   getImageWhithGroup,
-  loadSequences,
+  getAllGroups,
   removeFromSequence,
+  reorderGroups,
   reorderSequence
 } from './group'
 import {
@@ -303,7 +304,7 @@ ipcMain.handle('delete-image-in-group', async (_event, group: string, image: str
 })
 
 ipcMain.handle('get-all-groups', async (_event) => {
-  return await loadSequences(groupPath)
+  return await getAllGroups(groupPath)
 })
 
 ipcMain.handle('get-group', async (_event, group: string) => {
@@ -314,8 +315,12 @@ ipcMain.handle('delete-group', async (_event, group: string) => {
   return await deleteSequence(groupPath, group)
 })
 
-ipcMain.handle('reorder-group', async (_event, group: string, images: string[]) => {
+ipcMain.handle('reorder-in-group', async (_event, group: string, images: string[]) => {
   return await reorderSequence(groupPath, group, images)
+})
+
+ipcMain.handle('reorder-group', async (_event, groups: string[]) => {
+  return await reorderGroups(groupPath, groups)
 })
 
 ipcMain.handle(

@@ -33,6 +33,8 @@ contextBridge.exposeInMainWorld('api', {
   getGroups: () => ipcRenderer.invoke('get-all-groups'),
   getGroup: (group: string) => ipcRenderer.invoke('get-group', group),
   deleteGroup: (group: string) => ipcRenderer.invoke('delete-group', group),
-  reorderGroup: (group: string, images: string[]) =>
-    ipcRenderer.invoke('reorder-group', group, images)
+  reorderInGroup: (group: string, images: string[]) =>
+    ipcRenderer.invoke('reorder-in-group', group, images),
+  reorderGroup: (groups: string[]) =>
+    ipcRenderer.invoke('reorder-group', groups)
 })
