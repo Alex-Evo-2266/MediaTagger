@@ -73,7 +73,11 @@ export default function GroupsTable() {
   }, [sequenceToDelete])
 
   const handleAddGroup = () => {
-    window.api.addImagesInGroup(newGroupName, []).then(() => setAddGroupDialog(false))
+    window.api.addImagesInGroup(newGroupName, [])
+    .then(() => {
+      setAddGroupDialog(false)
+      load()
+    })
   }
 
   // --- DND reorder ---
