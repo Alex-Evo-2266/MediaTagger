@@ -285,6 +285,10 @@ ipcMain.handle('add-image-in-group', async (_event, group: string, image: string
   return await addArrToSequence(groupPath, group, [image])
 })
 
+ipcMain.handle('add-images-in-group', async (_event, group: string, image: string[]) => {
+  return await addArrToSequence(groupPath, group, image)
+})
+
 ipcMain.handle('delete-image-in-group', async (_event, group: string, image: string) => {
   return await removeFromSequence(groupPath, group, image)
 })

@@ -6,7 +6,7 @@ const SUPPORTED_EXTENSIONS = /\.(png|jpg|jpeg|gif|bmp|mp4|avi|mov)$/i
 
 interface IContent {
   file: Image
-  onClick: () => void
+  onClick?: () => void
 }
 
 export const Content: React.FC<IContent> = ({ file, onClick }) => {

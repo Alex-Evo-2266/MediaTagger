@@ -23,6 +23,7 @@ contextBridge.exposeInMainWorld('api', {
   },
   selectFolder: () => ipcRenderer.invoke('select-data-folder'),
   addImageInGroup: (group: string, nameImage: string) => ipcRenderer.invoke('add-image-in-group', group, nameImage),
+  addImagesInGroup: (group: string, nameImages: string[]) => ipcRenderer.invoke('add-images-in-group', group, nameImages),
   deleteImageInGroup: (group: string, nameImage: string) => ipcRenderer.invoke('delete-image-in-group', group, nameImage),
   getGroups: () => ipcRenderer.invoke('get-all-groups'),
   getGroup: (group: string) => ipcRenderer.invoke('get-group', group),

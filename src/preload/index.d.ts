@@ -22,6 +22,7 @@ interface API {
   reorderGroup: (group: string, images: string[]) => Promise<void>
   loadImageWithGroup: (filter: Filter, page?: number) => Promise<ImagesWithGroup>
   getImageWithGroup: (name: [string, string?], filter?: Filter) => Promise<Image64WithGroup | null>
+  addImagesInGroup: (group: string, nameImages: string[]) => Promise<void>
 }
 
 declare global {

@@ -14,6 +14,8 @@ import EditIcon from "@mui/icons-material/Edit";
 import { Preview } from "./Prev";
 import { GroupPage } from "./Group";
 import { GroupPageScroll } from "./GroupPageScroll";
+import { AddImages } from "./selectFiles";
+import { PlusOne } from "@mui/icons-material";
 
 
 export default function GroupsTable() {
@@ -22,12 +24,17 @@ export default function GroupsTable() {
     const [sequenceToDelete, setSequenceToDelete] = useState<string | null>(null);
     const [selectGroup, setSelectGroup] = useState<string | null>(null) 
     const [editGroup, seteditGroup] = useState<string | null>(null) 
+    const [addImagesDialog, setAddImagesDialog] = useState<string | null>(null) 
+
+    const load = useCallback(()=>{
+      window.api.getGroups().then(res=>{
+        setSequences(res)
+      })
+    },[])
 
   useEffect(() => {
-    window.api.getGroups().then(res=>{
-        setSequences(res)
-    })
-  }, []);
+    load()
+  }, [load]);
 
   const handleDeleteClick = (name: string) => {
     setSequenceToDelete(name);
@@ -52,7 +59,7 @@ export default function GroupsTable() {
   },[sequenceToDelete])
 
   if(editGroup !== null)
-    return <GroupPage groupName={editGroup} onBack={()=>setSelectGroup(null)}/>
+    return <GroupPage groupName={editGroup} onBack={()=>seteditGroup(null)}/>
 
   if(selectGroup !== null)
     return <GroupPageScroll groupName={selectGroup} onBack={()=>setSelectGroup(null)}/>
@@ -84,10 +91,23 @@ export default function GroupsTable() {
                 <TableCell>{name}</TableCell>
                 <TableCell>{images.length}</TableCell>
                 <TableCell>
-                  <IconButton color='default' onClick={() => seteditGroup(name)}>
+                  <IconButton color='default' onClick={(e) => {
+                      e.stopPropagation();
+                      seteditGroup(name);
+                    }}
+                  >
                     <EditIcon />
                   </IconButton>
-                  <IconButton color="error" onClick={() => handleDeleteClick(name)}>
+                  <IconButton color='default' onClick={(e) => {
+                    e.stopPropagation();
+                    setAddImagesDialog(name);
+                  }}>
+                    <PlusOne />
+                  </IconButton>
+                  <IconButton color="error" onClick={(e) => {
+                      e.stopPropagation();
+                      handleDeleteClick(name);
+                    }}>
                     <DeleteIcon />
                   </IconButton>
                 </TableCell>
@@ -104,6 +124,7 @@ export default function GroupsTable() {
           <Button color="error" onClick={deleteSequence}>Удалить</Button>
         </DialogActions>
       </Dialog>
+      <AddImages onBack={()=>setAddImagesDialog(null)} open={addImagesDialog !== null} groupName={addImagesDialog ?? ""} onReload={load}/>
     </Box>
   );
 }
