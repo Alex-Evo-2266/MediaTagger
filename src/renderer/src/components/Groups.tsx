@@ -1,4 +1,6 @@
 import { PlusOne } from '@mui/icons-material'
+import CheckIcon from '@mui/icons-material/Check'
+import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
 import {
@@ -35,6 +37,7 @@ export default function GroupsTable() {
   const [addImagesDialog, setAddImagesDialog] = useState<string | null>(null)
   const [addGroupDialog, setAddGroupDialog] = useState<boolean>(false)
   const [newGroupName, setNewGroupName] = useState<string>('')
+  const [copiedGroup, setCopiedGroup] = useState<string | null>(null)
 
   const load = useCallback(() => {
     window.api.getGroups().then((res) => {
@@ -103,14 +106,23 @@ export default function GroupsTable() {
                     </Avatar>
                   )}
                 </TableCell>
-                <TableCell
-                  sx={{ cursor: 'pointer', userSelect: 'none' }}
-                  onClick={(e) => {
-                    e.stopPropagation()
-                    navigator.clipboard.writeText(name)
-                  }}
-                >
+                <TableCell sx={{ display: 'table-cell', alignItems: 'end', gap: 1 }}>
                   {name}
+                  <IconButton
+                    size="small"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      navigator.clipboard.writeText(name)
+                      setCopiedGroup(name)
+                      setTimeout(() => setCopiedGroup(null), 1000) // через 1 сек вернём иконку
+                    }}
+                  >
+                    {copiedGroup === name ? (
+                      <CheckIcon fontSize="small" sx={{ color: 'green' }} />
+                    ) : (
+                      <ContentCopyIcon fontSize="small" />
+                    )}
+                  </IconButton>
                 </TableCell>
                 <TableCell>{images.length}</TableCell>
                 <TableCell>
