@@ -9,20 +9,27 @@ import {
   CardContent
 } from '@mui/material'
 import Grid from '@mui/material/Grid'
-import { JSX, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { GalleryItem, ImagesWithGroup } from 'src/preload/types'
 
 import { ImageDialogWithGroup } from './ImageDialogWithGroup'
 import { Content } from './ItemGallery'
 
-export default function GalleryWithGroup(): JSX.Element {
+interface GalleryProps{
+  initTag?: string[]
+}
+
+
+export const GalleryWithGroup: React.FC<GalleryProps> = ({initTag = []}) => {
   const [page, setPage] = useState<number>(0)
   const [pages, setPages] = useState<number>(1)
   const [items, setItems] = useState<GalleryItem[]>([])
   const [selected, setSelected] = useState<[string, string?] | null>(null)
   const [tagInput, setTagInput] = useState<string>('')
   const [search, setSearch] = useState<string>('')
-  const [tags, setTags] = useState<string[]>([])
+  const [tags, setTags] = useState<string[]>(initTag)
+
+  console.log(initTag, tags)
 
   const load = useCallback(() => {
     window.api

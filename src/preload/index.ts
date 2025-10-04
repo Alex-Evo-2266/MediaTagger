@@ -35,5 +35,8 @@ contextBridge.exposeInMainWorld('api', {
   deleteGroup: (group: string) => ipcRenderer.invoke('delete-group', group),
   reorderInGroup: (group: string, images: string[]) =>
     ipcRenderer.invoke('reorder-in-group', group, images),
-  reorderGroup: (groups: string[]) => ipcRenderer.invoke('reorder-group', groups)
+  reorderGroup: (groups: string[]) => ipcRenderer.invoke('reorder-group', groups),
+  renameGroup: (oldName: string, newName: string) => ipcRenderer.invoke('rename-group', oldName, newName),
+  getAllTags: () => ipcRenderer.invoke('get-all-tags'),
+  setMenuItem: (label:string) => ipcRenderer.send('menu-set', label),
 })

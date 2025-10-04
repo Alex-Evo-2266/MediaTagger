@@ -5,7 +5,7 @@ import { loadData } from './tags'
 import { Filter } from './types'
 import { GalleryItem, GroupInFile, Image64, Image64WithGroup } from '../preload/types'
 
-function loadSequences(sequencesPath: string): GroupInFile {
+export function loadSequences(sequencesPath: string): GroupInFile {
   if (!fs.existsSync(sequencesPath)) return { order: [], groups: {} }
   const data = JSON.parse(fs.readFileSync(sequencesPath, 'utf-8'))
   if ('order' in data && 'groups' in data) return data
@@ -302,4 +302,27 @@ export async function getImageWhithGroup(
     console.error('Ошибка при чтении файла:', err)
     return null
   }
+}
+
+export function renameGroup(
+  sequencesPath: string,
+  oldName: string,
+  newName: string
+): void {
+  const { groups, order } = loadSequences(sequencesPath);
+
+  if (groups[newName]) {
+    throw new Error("name already exists");
+  }
+
+  if (!groups[oldName]) {
+    throw new Error("old name not found");
+  }
+
+  groups[newName] = groups[oldName];
+  delete groups[oldName];
+
+  const newOrder = order.map(item => (item === oldName ? newName : item));
+
+  saveSequences(sequencesPath, groups, newOrder);
 }

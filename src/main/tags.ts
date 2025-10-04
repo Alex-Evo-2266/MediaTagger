@@ -4,6 +4,7 @@ import * as path from 'path'
 import { dialog } from 'electron'
 
 import { TagData, TagsFileType } from './types'
+import { loadSequences, saveSequences } from './group'
 
 export function getFileInTagsFile(baseDir: string, file: string): string {
   const fileName = path.relative(baseDir, file)
@@ -68,16 +69,43 @@ export function getAllTags(tagsPath: string): string[] {
   return Array.from(new Set(allTags))
 }
 
-export function renameInFile(tagsPath: string, oldName: string, newName: string): boolean {
+export function renameInFile(tagsPath: string, sequencesPath: string, oldName: string, newName: string): boolean {
   const tagsFile = loadData(tagsPath)
+  // Проверяем, есть ли уже элемент с таким именем
   if (newName in tagsFile) {
-    // throw Error("name alrady exist")
-    console.error('такой файл уже существует')
-    return false
+    console.error("такой файл уже существует");
+    return false;
+  }
+
+  // Проверяем, что старое имя существует
+  if (!(oldName in tagsFile)) {
+    console.error("файл с таким именем не найден");
+    return false;
   }
   tagsFile[newName] = { ...tagsFile[oldName] }
   delete tagsFile[oldName]
   saveData(tagsPath, tagsFile)
+
+  if (sequencesPath) {
+    const { groups, order } = loadSequences(sequencesPath);
+    let modified = false;
+
+    for (const groupName of Object.keys(groups)) {
+      const images = groups[groupName];
+      const newImages = images.map((img: string) =>
+        img === oldName ? newName : img
+      );
+      if (JSON.stringify(newImages) !== JSON.stringify(images)) {
+        groups[groupName] = newImages;
+        modified = true;
+      }
+    }
+
+    if (modified) {
+      saveSequences(sequencesPath, groups, order);
+    }
+  }
+
   return true
 }
 

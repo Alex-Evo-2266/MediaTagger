@@ -24,6 +24,9 @@ interface API {
   getImageWithGroup: (name: [string, string?], filter?: Filter) => Promise<Image64WithGroup | null>
   addImagesInGroup: (group: string, nameImages: string[]) => Promise<void>
   reorderGroup: (groups: string[]) => Promise<void>
+  renameGroup: (oldName: string, newName: string) => Promise<void>
+  getAllTags: () => Promise<string[]>
+  setMenuItem: (label: string) => Promise<void>
 }
 
 declare global {

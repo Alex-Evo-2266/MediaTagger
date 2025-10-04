@@ -1,19 +1,23 @@
 import { Pagination, Box, TextField, Stack, Chip } from '@mui/material'
 import Grid from '@mui/material/Grid'
-import { JSX, useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { Image } from 'src/preload/types'
 
 import { ImageDialog } from './ImageDialog'
 import { Content } from './ItemGallery'
 
-export default function Gallery(): JSX.Element {
+interface GalleryProps{
+  initTag?: string[]
+}
+
+export const Gallery:React.FC<GalleryProps> = ({initTag = []}) => {
   const [page, setPage] = useState<number>(0)
   const [pages, setPages] = useState<number>(1)
   const [images, setImages] = useState<Image[]>([])
   const [selected, setSelected] = useState<string | null>(null)
   const [tagInput, setTagInput] = useState<string>('')
   const [search, setSearch] = useState<string>('')
-  const [tags, setTags] = useState<string[]>([])
+  const [tags, setTags] = useState<string[]>(initTag)
 
   const load = useCallback((): void => {
     window.api.loadImage({ filter: { tags: tags }, search: search }, page).then((res) => {

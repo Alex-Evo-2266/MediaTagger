@@ -4,6 +4,7 @@ import * as path from 'path'
 import { loadData, saveData } from './tags'
 import { Filter } from './types'
 import { Image, Image64 } from '../preload/types'
+import { loadSequences, saveSequences } from './group'
 
 export async function imgbase64(filePath: string): Promise<string> {
   const ext = path.extname(filePath).toLowerCase()
@@ -195,6 +196,7 @@ export async function getImage(
 // Удаление изображения
 export async function deleteImage(
   tagsPath: string,
+  sequencesPath: string,
   folderPath: string,
   name: string
 ): Promise<boolean> {
@@ -214,6 +216,25 @@ export async function deleteImage(
     delete tagsFile[name]
     saveData(tagsPath, tagsFile)
 
+    // 🧹 Удаляем из групп, если есть sequencesPath
+    if (sequencesPath) {
+      const { groups, order } = loadSequences(sequencesPath);
+
+      let modified = false;
+      for (const groupName of Object.keys(groups)) {
+        const images = groups[groupName];
+        const newImages = images.filter((img: string) => img !== name);
+        if (newImages.length !== images.length) {
+          groups[groupName] = newImages;
+          modified = true;
+        }
+      }
+
+      if (modified) {
+        saveSequences(sequencesPath, groups, order);
+      }
+    }
+
     return true
   } catch (err) {
     console.error('Ошибка при удалении изображения:', err)
@@ -231,14 +252,18 @@ export async function deleteImage(
  */
 export async function renameImageFile(
   tagsPath: string,
+  sequencesPath: string,
   folderPath: string,
   oldName: string,
   newName: string
 ): Promise<boolean> {
   try {
-    const tagsFile = loadData(tagsPath)
-    const data = tagsFile[oldName]
-    if (!data) return false
+    const tagsFile = loadData(tagsPath);
+    const data = tagsFile[oldName];
+    if (!data) {
+      console.error("Файл с таким именем не найден");
+      return false;
+    }
 
     const oldPath = path.join(folderPath, data.path)
     const newPath = path.join(folderPath, newName)
@@ -255,8 +280,31 @@ export async function renameImageFile(
     // Обновляем JSON
     delete tagsFile[oldName]
     tagsFile[newName] = { ...data, path: newName }
-
     saveData(tagsPath, tagsFile)
+
+    if (sequencesPath) {
+      const { groups, order } = loadSequences(sequencesPath);
+      let modified = false;
+
+      for (const groupName of Object.keys(groups)) {
+        const images = groups[groupName];
+        const updatedImages = images.map((img: string) =>
+          img === oldName ? newName : img
+        );
+
+        if (JSON.stringify(updatedImages) !== JSON.stringify(images)) {
+          groups[groupName] = updatedImages;
+          modified = true;
+        }
+      }
+
+      if (modified) {
+        saveSequences(sequencesPath, groups, order);
+        console.log(`Имя "${oldName}" обновлено на "${newName}" во всех группах.`);
+      }
+    }
+
+
     return true
   } catch (err) {
     console.error('Ошибка при переименовании файла:', err)

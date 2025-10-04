@@ -1,10 +1,12 @@
 import { createTheme, ThemeProvider } from '@mui/material'
 import { JSX, useEffect, useState } from 'react'
 
-import Gallery from './components/Gallery'
 import GalleryNoTag from './components/GalleryNoTag'
-import GalleryWithGroup from './components/GalleryWithGroup'
 import GroupsTable from './components/Groups'
+import { AllTagsPage } from './components/AllTags'
+import { Gallery } from './components/Gallery'
+import { MenuContext } from './context'
+import { GalleryWithGroup } from './components/GalleryWithGroup'
 
 const darkTheme = createTheme({
   palette: {
@@ -20,8 +22,11 @@ const darkTheme = createTheme({
   }
 })
 
+
+
 function App(): JSX.Element {
   const [page, setPage] = useState('withGroup')
+  const [tag, setTag] = useState<string[]>([])
 
   useEffect(() => {
     window.api.onNavigate((page) => {
@@ -29,20 +34,32 @@ function App(): JSX.Element {
     })
   }, [])
 
+  const updateMenu = (label: string, tags?: string[]) => {
+    setTag(tags ?? [])
+    window.api.setMenuItem(label)
+  }
+
+  console.log(page, tag)
+
   return (
-    <ThemeProvider theme={darkTheme}>
-      {page === 'notag' ? (
-        <GalleryNoTag />
-      ) : page === 'groups' ? (
-        <GroupsTable />
-      ) : page === 'withGroup' ? (
-        <GalleryWithGroup />
-      ) : page === 'all' ? (
-        <Gallery />
-      ) : (
-        <GalleryWithGroup />
-      )}
-    </ThemeProvider>
+    <MenuContext.Provider value={{onChangeMenu: updateMenu}}>
+      <ThemeProvider theme={darkTheme}>
+        {page === 'notag' ? (
+          <GalleryNoTag />
+        ) : page === 'groups' ? (
+          <GroupsTable />
+        ) : page === 'withGroup' ? (
+          <GalleryWithGroup initTag={tag} />
+        ) : page === "tags" ? (
+          <AllTagsPage/>
+        ) : page === 'all' ? (
+          <Gallery initTag={tag}/>
+        ) : (
+          <GalleryWithGroup initTag={tag} />
+        )}
+      </ThemeProvider>
+    </MenuContext.Provider>
+    
   )
 }
 

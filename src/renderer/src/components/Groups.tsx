@@ -4,6 +4,7 @@ import CheckIcon from '@mui/icons-material/Check'
 import ContentCopyIcon from '@mui/icons-material/ContentCopy'
 import DeleteIcon from '@mui/icons-material/Delete'
 import EditIcon from '@mui/icons-material/Edit'
+import TuneIcon from '@mui/icons-material/Tune'
 import {
   Table,
   TableBody,
@@ -39,6 +40,9 @@ export default function GroupsTable(): JSX.Element {
   const [addGroupDialog, setAddGroupDialog] = useState<boolean>(false)
   const [newGroupName, setNewGroupName] = useState<string>('')
   const [copiedGroup, setCopiedGroup] = useState<string | null>(null)
+  const [renameDialog, setRenameDialog] = useState<string | null>(null)
+  const [newName, setNewName] = useState<string>("")
+
 
   const load = useCallback(() => {
     window.api.getGroups().then((res) => {
@@ -79,6 +83,15 @@ export default function GroupsTable(): JSX.Element {
     })
   }
 
+  const renameGroup = useCallback(() => {
+    if(renameDialog && newName)
+      window.api.renameGroup(renameDialog, newName).then(()=>{
+        setRenameDialog(null)
+        setNewName("")
+        load()
+    })
+  },[renameDialog, newName])
+ 
   // --- DND reorder ---
   const onDragEnd = (result: DropResult): void => {
     if (!result.destination) return
@@ -167,6 +180,15 @@ export default function GroupsTable(): JSX.Element {
                                 seteditGroup(name)
                               }}
                             >
+                              <TuneIcon />
+                            </IconButton>
+                            <IconButton
+                              color="default"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setRenameDialog(name)
+                              }}
+                            >
                               <EditIcon />
                             </IconButton>
                             <IconButton
@@ -213,6 +235,28 @@ export default function GroupsTable(): JSX.Element {
 
       {/* Диалог создания */}
       <Dialog
+        open={!!renameDialog}
+        onClose={() => setRenameDialog(null)}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Переименовать группу {renameDialog}</DialogTitle>
+        <DialogContent>
+          <Box display="flex" gap={1} mt={1}>
+            <TextField
+              fullWidth
+              label="название группы"
+              value={newName}
+              onChange={(e) => setNewName(e.target.value)}
+            />
+            <Button variant="outlined" onClick={renameGroup}>
+              Переименовать
+            </Button>
+          </Box>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog
         open={addGroupDialog}
         onClose={() => setAddGroupDialog(false)}
         maxWidth="sm"
@@ -223,7 +267,7 @@ export default function GroupsTable(): JSX.Element {
           <Box display="flex" gap={1} mt={1}>
             <TextField
               fullWidth
-              label="группы"
+              label="название группы"
               value={newGroupName}
               onChange={(e) => setNewGroupName(e.target.value)}
             />

@@ -12,6 +12,7 @@ import {
   getAllGroups,
   removeFromSequence,
   reorderGroups,
+  renameGroup,
   reorderSequence
 } from './group'
 import {
@@ -23,7 +24,7 @@ import {
   renameImageFile
 } from './load_img'
 import { syncTagsWithFiles } from './sinhron'
-import { createTags, renameInFile, saveTags } from './tags'
+import { createTags, getAllTags, renameInFile, saveTags } from './tags'
 import { Filter, Images } from './types'
 import { ImagesWithGroup } from '../preload/types'
 
@@ -135,6 +136,7 @@ function createWindow(): void {
           submenu: [
             {
               label: 'Все медиа',
+              id: 'all',
               type: 'radio',
               checked: false,
               click: () => {
@@ -145,6 +147,7 @@ function createWindow(): void {
             {
               label: 'Посказать изображения без тегов',
               type: 'radio',
+              id: 'notag',
               checked: false,
               click: () => {
                 if (!mainWindow) return
@@ -154,6 +157,7 @@ function createWindow(): void {
             {
               label: 'Группы',
               type: 'radio',
+              id: 'groups',
               checked: false,
               click: () => {
                 if (!mainWindow) return
@@ -163,10 +167,21 @@ function createWindow(): void {
             {
               label: 'Галерея',
               type: 'radio',
+              id: 'withGroup',
               checked: true,
               click: () => {
                 if (!mainWindow) return
                 mainWindow.webContents.send('navigate', 'withGroup')
+              }
+            },
+            {
+              label: 'Теги',
+              type: 'radio',
+              id: 'tags',
+              checked: false,
+              click: () => {
+                if (!mainWindow) return
+                mainWindow.webContents.send('navigate', 'tags')
               }
             }
           ]
@@ -264,16 +279,16 @@ ipcMain.handle('get-image', async (_event, name: string, filter: Filter) => {
 })
 
 ipcMain.handle('delete-image', async (_event, name: string) => {
-  const data = await deleteImage(tagsPath, imagesPath, name)
+  const data = await deleteImage(tagsPath, groupPath, imagesPath, name)
   return data
 })
 
 ipcMain.handle('rename-image', async (_event, oldName: string, newName: string) => {
-  return await renameInFile(tagsPath, oldName, newName)
+  return await renameInFile(tagsPath, groupPath, oldName, newName)
 })
 
 ipcMain.handle('rename-image-file', async (_event, oldName: string, newName: string) => {
-  return await renameImageFile(tagsPath, imagesPath, oldName, newName)
+  return await renameImageFile(tagsPath, groupPath, imagesPath, oldName, newName)
 })
 
 ipcMain.handle('select-data-folder', async () => {
@@ -341,3 +356,26 @@ ipcMain.handle('get-image-with-group', async (_event, name: [string, string?], f
   const data = await getImageWhithGroup(tagsPath, imagesPath, name, groupPath, filter)
   return data
 })
+
+ipcMain.handle('rename-group', async (_event, oldName:string, newName: string) => {
+  await renameGroup(groupPath, oldName, newName)
+})
+
+ipcMain.handle('get-all-tags', async (_event) => {
+  return getAllTags(tagsPath)
+})
+
+ipcMain.on("menu-set", (_event, label) => {
+  const menu = Menu.getApplicationMenu();
+
+  if (!menu) return;
+
+  const menuItem = menu.getMenuItemById(label);
+  if (menuItem) {
+    menuItem.checked = true;
+  }
+
+  mainWindow?.webContents.send('navigate', label)
+
+  Menu.setApplicationMenu(menu);
+});
