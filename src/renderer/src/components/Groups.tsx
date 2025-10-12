@@ -42,6 +42,7 @@ export default function GroupsTable(): JSX.Element {
   const [copiedGroup, setCopiedGroup] = useState<string | null>(null)
   const [renameDialog, setRenameDialog] = useState<string | null>(null)
   const [newName, setNewName] = useState<string>("")
+  const [sortAsc, setSortAsc] = useState(true) // направление сортировки
 
 
   const load = useCallback(() => {
@@ -111,6 +112,34 @@ export default function GroupsTable(): JSX.Element {
     window.api.reorderGroup(entries.map(([name]) => name))
   }
 
+  const naturalCompare = (a: string, b: string): number => {
+    const ax = a.match(/\d+|[^\d]+/g) || []
+    const bx = b.match(/\d+|[^\d]+/g) || []
+
+    for (let i = 0; i < Math.min(ax.length, bx.length); i++) {
+      const aPart = ax[i]
+      const bPart = bx[i]
+
+      if (aPart === bPart) continue
+
+      // сравниваем числа, если обе части числа
+      const aNum = Number(aPart)
+      const bNum = Number(bPart)
+      if (!isNaN(aNum) && !isNaN(bNum)) return aNum - bNum
+
+      // иначе сравниваем строки
+      return aPart.localeCompare(bPart)
+    }
+
+    // если все части совпадают, сортируем по длине
+    return ax.length - bx.length
+  }
+
+  // Отсортированные группы
+  const sortedSequences = Object.entries(sequences).sort(([nameA], [nameB]) =>
+  sortAsc ? naturalCompare(nameA, nameB) : naturalCompare(nameB, nameA)
+)
+
   if (editGroup !== null)
     return <GroupPage groupName={editGroup} onBack={() => seteditGroup(null)} />
 
@@ -128,13 +157,18 @@ export default function GroupsTable(): JSX.Element {
                 <TableHead>
                   <TableRow>
                     <TableCell>Превью</TableCell>
-                    <TableCell>Название группы</TableCell>
+                    <TableCell>
+                      Название группы
+                      <Button size="small" onClick={() => setSortAsc(!sortAsc)}>
+                        {sortAsc ? '↑' : '↓'}
+                      </Button>
+                    </TableCell>
                     <TableCell>Количество изображений</TableCell>
                     <TableCell>Действия</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
-                  {Object.entries(sequences).map(([name, images], index) => (
+                  {sortedSequences.map(([name, images], index) => (
                     <Draggable key={name} draggableId={name} index={index}>
                       {(provided, snapshot) => (
                         <TableRow
