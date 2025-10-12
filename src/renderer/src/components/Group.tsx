@@ -50,6 +50,8 @@ export const GroupPage: React.FC<GroupPageProps> = ({ groupName, onBack }) => {
     setOpenDialog(false)
   }
 
+  useEffect(()=>console.log(images),[images])
+
   const handleDelete = useCallback(() => {
     if (imageToDelete) {
       window.api

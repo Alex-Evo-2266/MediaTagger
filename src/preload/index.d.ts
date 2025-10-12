@@ -11,7 +11,7 @@ interface API {
   deleteImg: (name: string) => Promise<void>
   renameImg: (oldName: string, newName: string) => Promise<void>
   renameImgFile: (oldName: string, newName: string) => Promise<boolean>
-  onTagsUpdated: (callback: (updated: boolean) => void) => Electron.IpcRenderer
+  onTagsUpdated: (callback: (updated: string[]) => void) => Electron.IpcRenderer
   onNavigate: (callback: (page: string) => void) => void
   selectFolder: () => void
   addImageInGroup: (group: string, nameImage: string) => Promise<void>
@@ -27,6 +27,10 @@ interface API {
   renameGroup: (oldName: string, newName: string) => Promise<void>
   getAllTags: () => Promise<string[]>
   setMenuItem: (label: string) => Promise<void>
+  mergeDuplicatePaths: (callback: (updated: {
+    removedPaths: string[];
+    updatePaths: string[];
+}) => void) => Electron.IpcRenderer
 }
 
 declare global {

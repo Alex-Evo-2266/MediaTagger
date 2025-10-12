@@ -22,10 +22,11 @@ export default function GalleryNoTag(): JSX.Element {
   useEffect(() => {
     load()
     window.api.onTagsUpdated((updated) => {
-      if (updated) load()
+      console.log(updated)
+      if (updated.length > 0) load()
     })
   }, [load])
-
+  
   return (
     <Box p={2} display="flex" flexDirection="column" height="100vh">
       {/* Прокручиваемая область */}

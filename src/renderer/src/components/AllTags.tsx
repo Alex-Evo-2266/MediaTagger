@@ -21,7 +21,7 @@ export const AllTagsPage = () => {
     },[load])
 
     return(
-        <Box p={2} display="flex" gap="10px" flexWrap="wrap" height="100vh">
+        <Box p={2} display="flex" gap="10px" flexWrap="wrap" height="100vh" sx={{overflowY: "scroll"}} >
             {tags.map((tag) => (
               <Chip
                 key={tag}

@@ -43,7 +43,8 @@ export const GalleryWithGroup: React.FC<GalleryProps> = ({initTag = []}) => {
   useEffect(() => {
     load()
     window.api.onTagsUpdated((updated) => {
-      if (updated) load()
+      console.log(updated)
+      if (updated.length > 0) load()
     })
   }, [load])
 

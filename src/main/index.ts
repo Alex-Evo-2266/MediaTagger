@@ -23,7 +23,7 @@ import {
   imgbase64,
   renameImageFile
 } from './load_img'
-import { syncTagsWithFiles } from './sinhron'
+import { mergeDuplicatePaths, syncTagsWithFiles } from './sinhron'
 import { createTags, getAllTags, renameInFile, saveTags } from './tags'
 import { Filter, Images } from './types'
 import { ImagesWithGroup } from '../preload/types'
@@ -111,6 +111,17 @@ function createWindow(): void {
             if (!mainWindow) return
 
             const updated = syncTagsWithFiles(tagsPath, imagesPath)
+
+            // Отправляем событие в renderer о том, что данные обновились
+            mainWindow.webContents.send('tags-updated', updated)
+          }
+        },
+        {
+          label: 'Удаление дубликатов',
+          click: (_menuItem) => {
+            if (!mainWindow) return
+
+            const updated = mergeDuplicatePaths(tagsPath)
 
             // Отправляем событие в renderer о том, что данные обновились
             mainWindow.webContents.send('tags-updated', updated)

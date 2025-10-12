@@ -18,7 +18,7 @@ contextBridge.exposeInMainWorld('api', {
     ipcRenderer.invoke('rename-image', oldName, newName),
   renameImgFile: (oldName: string, newName: string) =>
     ipcRenderer.invoke('rename-image-file', oldName, newName),
-  onTagsUpdated: (callback: (updated: boolean) => void) =>
+  onTagsUpdated: (callback: (updated: string[]) => void) =>
     ipcRenderer.on('tags-updated', (_event, updated) => callback(updated)),
   onNavigate: (callback: (page: string) => void) => {
     ipcRenderer.on('navigate', (_, page: string) => callback(page))
@@ -39,4 +39,6 @@ contextBridge.exposeInMainWorld('api', {
   renameGroup: (oldName: string, newName: string) => ipcRenderer.invoke('rename-group', oldName, newName),
   getAllTags: () => ipcRenderer.invoke('get-all-tags'),
   setMenuItem: (label:string) => ipcRenderer.send('menu-set', label),
+  mergeDuplicatePaths: (callback: (updated: {removedPaths: string[], updatePaths: string[]}) => void) =>
+    ipcRenderer.on('tags-updated', (_event, updated) => callback(updated)),
 })

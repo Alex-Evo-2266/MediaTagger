@@ -83,6 +83,10 @@ export default function GroupsTable(): JSX.Element {
     })
   }
 
+  useEffect(()=>{
+    console.log(sequences)
+  },[sequences])
+
   const renameGroup = useCallback(() => {
     if(renameDialog && newName)
       window.api.renameGroup(renameDialog, newName).then(()=>{

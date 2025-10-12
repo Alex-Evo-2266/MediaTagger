@@ -146,11 +146,22 @@ export async function getGroup(
   const images = groups[seqName]
   const imagesParse: (Image64 | null)[] = []
   for (const element of images) {
-    imagesParse.push(await getImage(tagsPath, folderPath, element))
+    let data = await getImage(tagsPath, folderPath, element)
+    if(data === null)
+    {
+      data = {
+        name: element,
+        tags: [],
+        path: "",
+        fullPath: "",
+        base64: ""
+      }
+    }
+    imagesParse.push(data)
   }
-  images.map((img) => {
-    getImage(tagsPath, folderPath, img)
-  })
+  // images.map((img) => {
+  //   getImage(tagsPath, folderPath, img)
+  // })
   return imagesParse.filter((img): img is Image64 => img !== null)
 }
 
