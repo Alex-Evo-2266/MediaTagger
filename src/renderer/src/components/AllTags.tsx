@@ -1,5 +1,7 @@
 import { Box, Chip } from "@mui/material"
 import { MenuContext } from "@renderer/context"
+import { colors } from "@renderer/tagColor"
+import { getValueIfStarts } from "@renderer/utils"
 import { useContext, useEffect, useState } from "react"
 
 
@@ -26,6 +28,7 @@ export const AllTagsPage = () => {
               <Chip
                 key={tag}
                 label={tag}
+                sx={{color: getValueIfStarts(colors, tag) as string, borderColor: getValueIfStarts(colors, tag) as string}}
                 onClick={() => clickHandler(tag)}
                 color="primary"
                 variant="outlined"

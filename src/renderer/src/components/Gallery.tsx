@@ -5,6 +5,8 @@ import { Image } from 'src/preload/types'
 
 import { ImageDialog } from './ImageDialog'
 import { Content } from './ItemGallery'
+import { getValueIfStarts } from '@renderer/utils'
+import { colors } from '@renderer/tagColor'
 
 interface GalleryProps{
   initTag?: string[]
@@ -78,7 +80,9 @@ export const Gallery:React.FC<GalleryProps> = ({initTag = []}) => {
         />
         <Stack direction="row" spacing={1} mt={1} flexWrap="wrap">
           {tags.map((tag) => (
-            <Chip key={tag} label={tag} onDelete={() => handleDeleteTag(tag)} color="primary" />
+            <Chip                 
+              sx={{color: getValueIfStarts(colors, tag) as string, borderColor: getValueIfStarts(colors, tag) as string}}
+              key={tag} label={tag} onDelete={() => handleDeleteTag(tag)} color="primary" />
           ))}
         </Stack>
       </Box>

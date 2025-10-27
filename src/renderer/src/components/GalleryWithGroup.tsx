@@ -14,6 +14,8 @@ import { GalleryItem, ImagesWithGroup } from 'src/preload/types'
 
 import { ImageDialogWithGroup } from './ImageDialogWithGroup'
 import { Content } from './ItemGallery'
+import { getValueIfStarts } from '@renderer/utils'
+import { colors } from '@renderer/tagColor'
 
 interface GalleryProps{
   initTag?: string[]
@@ -96,7 +98,7 @@ export const GalleryWithGroup: React.FC<GalleryProps> = ({initTag = []}) => {
         />
         <Stack direction="row" spacing={1} mt={1} flexWrap="wrap">
           {tags.map((tag) => (
-            <Chip key={tag} label={tag} onDelete={() => handleDeleteTag(tag)} color="primary" />
+            <Chip key={tag} sx={{color: getValueIfStarts(colors, tag) as string, borderColor: getValueIfStarts(colors, tag) as string}} label={tag} onDelete={() => handleDeleteTag(tag)} color="primary" />
           ))}
         </Stack>
       </Box>

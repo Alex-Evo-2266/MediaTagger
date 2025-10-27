@@ -19,6 +19,8 @@ import { Filter, Image64 } from 'src/preload/types'
 
 import { ConfirmDialog } from './Confirm'
 import { ImageLightbox } from './ImageLightbox'
+import { getValueIfStarts } from '@renderer/utils'
+import { colors } from '@renderer/tagColor'
 
 interface IImageDialog {
   name: string
@@ -209,6 +211,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
             {tags.map((tag) => (
               <Chip
                 key={tag}
+                sx={{color: getValueIfStarts(colors, tag) as string, borderColor: getValueIfStarts(colors, tag) as string}}
                 label={tag}
                 onDelete={editing ? () => handleDeleteTag(tag) : undefined}
                 onClick={!editing && onTagClick ? () => onTagClick(tag) : undefined}
