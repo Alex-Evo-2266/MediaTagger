@@ -20,7 +20,7 @@ import { Filter, Image64 } from 'src/preload/types'
 import { ConfirmDialog } from './Confirm'
 import { ImageLightbox } from './ImageLightbox'
 import { getValueIfStarts } from '@renderer/utils'
-import { colors } from '@renderer/tagColor'
+import { colors, groupColor } from '@renderer/tagColor'
 
 interface IImageDialog {
   name: string
@@ -46,6 +46,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
   const [order, setOrder] = useState<string | null>(null)
   const [alert, setAlert] = useState<string | null>(null)
   const [file, setFile] = useState<Image64 | null>(null)
+  const [groups, setGroups] = useState<string[]>([])
 
   // Для диалога переименования
   const [renameDialogOpen, setRenameDialogOpen] = useState(false)
@@ -64,9 +65,15 @@ export const ImageDialog: React.FC<IImageDialog> = ({
     })
   }, [currentImgName, filter])
 
+  const loadGroups = useCallback(async() => {
+    const data = await window.api.getGroupsByImage(currentImgName)
+    setGroups(data)
+  },[currentImgName])
+
   useEffect(() => {
     load()
-  }, [load])
+    loadGroups()
+  }, [load, loadGroups])
 
   useEffect(() => {
     setCurrentImgName(name)
@@ -203,6 +210,20 @@ export const ImageDialog: React.FC<IImageDialog> = ({
               <ArrowForwardIosIcon />
             </IconButton>
           </Box>
+
+          <Stack direction="row" spacing={1} flexWrap="wrap" mb={2}>
+                      {groups.map((tag) => (
+                        <Chip
+                          key={tag}
+                          sx={{color: groupColor, borderColor: groupColor}}
+                          label={tag}
+                          onDelete={editing ? () => handleDeleteTag(tag) : undefined}
+                          onClick={!editing && onTagClick ? () => onTagClick(tag) : undefined}
+                          color="primary"
+                          variant="outlined"
+                        />
+                      ))}
+          </Stack>
 
           <DialogContentText>путь {file?.path}</DialogContentText>
 

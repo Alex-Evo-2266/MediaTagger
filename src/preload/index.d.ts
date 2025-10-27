@@ -27,6 +27,7 @@ interface API {
   renameGroup: (oldName: string, newName: string) => Promise<void>
   getAllTags: () => Promise<string[]>
   setMenuItem: (label: string) => Promise<void>
+  getGroupsByImage: (name: string) => Promise<string[]>
   mergeDuplicatePaths: (callback: (updated: {
     removedPaths: string[];
     updatePaths: string[];

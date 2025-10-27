@@ -337,3 +337,17 @@ export function renameGroup(
 
   saveSequences(sequencesPath, groups, newOrder);
 }
+
+export function getGroupsByImage(sequencesPath: string, imageName: string): string[] {
+  const { groups } = loadSequences(sequencesPath);
+
+  const result: string[] = [];
+
+  for (const [groupName, images] of Object.entries(groups)) {
+    if (images.includes(imageName)) {
+      result.push(groupName);
+    }
+  }
+
+  return result;
+}

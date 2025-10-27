@@ -13,7 +13,8 @@ import {
   removeFromSequence,
   reorderGroups,
   renameGroup,
-  reorderSequence
+  reorderSequence,
+  getGroupsByImage
 } from './group'
 import {
   deleteImage,
@@ -390,3 +391,7 @@ ipcMain.on("menu-set", (_event, label) => {
 
   Menu.setApplicationMenu(menu);
 });
+
+ipcMain.handle('get-group-by-image', async (_event, name: string) => {
+  return getGroupsByImage(groupPath, name)
+})

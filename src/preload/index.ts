@@ -41,4 +41,6 @@ contextBridge.exposeInMainWorld('api', {
   setMenuItem: (label:string) => ipcRenderer.send('menu-set', label),
   mergeDuplicatePaths: (callback: (updated: {removedPaths: string[], updatePaths: string[]}) => void) =>
     ipcRenderer.on('tags-updated', (_event, updated) => callback(updated)),
+  getGroupsByImage: (name: string) => ipcRenderer.invoke('get-group-by-image', name)
+  
 })

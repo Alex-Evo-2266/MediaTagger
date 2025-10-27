@@ -1,7 +1,7 @@
 import { Box, Chip } from "@mui/material"
 import { MenuContext } from "@renderer/context"
 import { colors } from "@renderer/tagColor"
-import { getValueIfStarts } from "@renderer/utils"
+import { customSort, getValueIfStarts } from "@renderer/utils"
 import { useContext, useEffect, useState } from "react"
 
 
@@ -11,7 +11,7 @@ export const AllTagsPage = () => {
     const {onChangeMenu} = useContext(MenuContext)
 
     const load = async () => {
-        setTags(await window.api.getAllTags())
+        setTags(customSort(await window.api.getAllTags(), colors))
     }
 
     const clickHandler = (name:string) => {

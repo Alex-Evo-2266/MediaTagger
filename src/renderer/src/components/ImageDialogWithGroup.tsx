@@ -20,7 +20,7 @@ import { Filter, Image64WithGroup } from 'src/preload/types'
 import { ConfirmDialog } from './Confirm'
 import { ImageLightbox } from './ImageLightbox'
 import { getValueIfStarts } from '@renderer/utils'
-import { colors } from '@renderer/tagColor'
+import { colors, groupColor } from '@renderer/tagColor'
 
 interface IImageDialog {
   name: string
@@ -49,6 +49,7 @@ export const ImageDialogWithGroup: React.FC<IImageDialog> = ({
   const [alert, setAlert] = useState<string | null>(null)
   const [file, setFile] = useState<Image64WithGroup | null>(null)
   const [lightboxOpen, setLightboxOpen] = useState(false)
+  const [groups, setGroups] = useState<string[]>([])
 
   // Для диалога переименования
   const [groupName, setGroupName] = useState('')
@@ -62,9 +63,17 @@ export const ImageDialogWithGroup: React.FC<IImageDialog> = ({
     })
   }, [currentImgName, filter])
 
+  const loadGroups = useCallback(async() => {
+    const data = await window.api.getGroupsByImage(name)
+    setGroups(data)
+  },[])
+
   useEffect(() => {
     load()
-  }, [load])
+    loadGroups()
+  }, [load, loadGroups])
+
+
 
   useEffect(() => {
     setCurrentImgName([name, group])
@@ -176,6 +185,20 @@ export const ImageDialogWithGroup: React.FC<IImageDialog> = ({
               <ArrowForwardIosIcon />
             </IconButton>
           </Box>
+          
+          <Stack direction="row" spacing={1} flexWrap="wrap" mb={2}>
+            {groups.map((tag) => (
+              <Chip
+                key={tag}
+                sx={{color: groupColor, borderColor: groupColor}}
+                label={tag}
+                onDelete={editing ? () => handleDeleteTag(tag) : undefined}
+                onClick={!editing && onTagClick ? () => onTagClick(tag) : undefined}
+                color="primary"
+                variant="outlined"
+              />
+            ))}
+          </Stack>
 
           <DialogContentText>путь {file?.path}</DialogContentText>
 
