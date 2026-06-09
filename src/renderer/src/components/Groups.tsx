@@ -21,9 +21,10 @@ import {
   Button,
   IconButton,
   DialogContent,
-  TextField
+  TextField,
+  Input
 } from '@mui/material'
-import { JSX, useCallback, useEffect, useState } from 'react'
+import { JSX, useCallback, useDeferredValue, useEffect, useMemo, useState } from 'react'
 
 import { GroupPage } from './Group'
 import { GroupPageScroll } from './GroupPageScroll'
@@ -43,6 +44,8 @@ export default function GroupsTable(): JSX.Element {
   const [renameDialog, setRenameDialog] = useState<string | null>(null)
   const [newName, setNewName] = useState<string>("")
   const [sortAsc, setSortAsc] = useState(true) // направление сортировки
+  const [search, setSearch] = useState<string>("") 
+  const searchDef = useDeferredValue(search)
 
 
   const load = useCallback(() => {
@@ -112,7 +115,7 @@ export default function GroupsTable(): JSX.Element {
     window.api.reorderGroup(entries.map(([name]) => name))
   }
 
-  const naturalCompare = (a: string, b: string): number => {
+  const naturalCompare = useCallback((a: string, b: string): number => {
     const ax = a.match(/\d+|[^\d]+/g) || []
     const bx = b.match(/\d+|[^\d]+/g) || []
 
@@ -133,12 +136,21 @@ export default function GroupsTable(): JSX.Element {
 
     // если все части совпадают, сортируем по длине
     return ax.length - bx.length
-  }
+  },[])
 
   // Отсортированные группы
-  const sortedSequences = Object.entries(sequences).sort(([nameA], [nameB]) =>
-  sortAsc ? naturalCompare(nameA, nameB) : naturalCompare(nameB, nameA)
-)
+  const sortedSequences = useMemo(() =>
+    Object.entries(sequences)
+      .filter(([name]) =>
+        name.toLowerCase().includes(searchDef.toLowerCase())
+      )
+      .sort(([nameA], [nameB]) =>
+        sortAsc
+          ? naturalCompare(nameA, nameB)
+          : naturalCompare(nameB, nameA)
+      ),
+    [sequences, searchDef, sortAsc, naturalCompare]
+  );
 
   if (editGroup !== null)
     return <GroupPage groupName={editGroup} onBack={() => seteditGroup(null)} />
@@ -149,6 +161,7 @@ export default function GroupsTable(): JSX.Element {
   return (
     <Box sx={{ width: '100vw', height: '100vh', overflow: 'hidden' }}>
       <Button onClick={() => setAddGroupDialog(true)}>Создать группу</Button>
+      <Input onChange={(e)=>setSearch(e.target.value)} value={search} placeholder='поиск' style={{width: "100%"}}/>
       <TableContainer component={Paper} sx={{ width: '100%', height: '90%', overflow: 'auto' }}>
         <DragDropContext onDragEnd={onDragEnd}>
           <Droppable droppableId="groups-droppable">
