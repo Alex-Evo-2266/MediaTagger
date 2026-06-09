@@ -57,6 +57,7 @@ export const ImageDialogWithGroup: React.FC<IImageDialog> = ({
 
   const load = useCallback(() => {
     window.api.getImageWithGroup(currentImgName, filter).then((res: Image64WithGroup | null) => {
+      console.log(res)
       setFile(res)
       setOrder(res?.order ?? null)
       setTags(res?.tags ?? [])

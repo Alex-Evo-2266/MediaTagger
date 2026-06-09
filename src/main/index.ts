@@ -3,31 +3,10 @@ import * as path from 'path'
 
 import { app, BrowserWindow, dialog, ipcMain, Menu } from 'electron'
 
-import {
-  addArrToSequence,
-  deleteSequence,
-  getGalleryItems,
-  getGroup,
-  getImageWhithGroup,
-  getAllGroups,
-  removeFromSequence,
-  reorderGroups,
-  renameGroup,
-  reorderSequence,
-  getGroupsByImage
-} from './group'
-import {
-  deleteImage,
-  getImage,
-  getImagesFromFolder,
-  getImagesFromFolderNotTag,
-  imgbase64,
-  renameImageFile
-} from './load_img'
 import { mergeDuplicatePaths, syncTagsWithFiles } from './sinhron'
-import { createTags, getAllTags, renameInFile, saveTags } from './tags'
-import { Filter, Images } from './types'
-import { ImagesWithGroup } from '../preload/types'
+import { Filter, Images, ImagesWithGroup } from '../preload/types'
+import { GalleryStore } from './GaleryStore'
+import { imgbase64 } from './utils/base64'
 
 let mainWindow: BrowserWindow | null = null
 let userDataPath: string
@@ -35,6 +14,7 @@ let configPath: string
 let tagsPath: string
 let groupPath: string
 let imagesPath: string
+let galleryStore: GalleryStore
 const IMG_IN_PAGE = 10
 const isDev = process.env.NODE_ENV === 'development'
 
@@ -104,6 +84,7 @@ function createWindow(): void {
               if (!mainWindow) return
               mainWindow.webContents.send('tags-updated', res)
             })
+            galleryStore.reload()
           }
         },
         {
@@ -114,6 +95,7 @@ function createWindow(): void {
             const updated = syncTagsWithFiles(tagsPath, imagesPath)
 
             // Отправляем событие в renderer о том, что данные обновились
+            galleryStore.reload()
             mainWindow.webContents.send('tags-updated', updated)
           }
         },
@@ -125,6 +107,7 @@ function createWindow(): void {
             const updated = mergeDuplicatePaths(tagsPath)
 
             // Отправляем событие в renderer о том, что данные обновились
+            galleryStore.reload()
             mainWindow.webContents.send('tags-updated', updated)
           }
         },
@@ -216,6 +199,14 @@ function initDataFolder(folder: string): void {
   groupPath = path.join(userDataPath, 'sequences.json')
   imagesPath = userDataPath
 
+  galleryStore = new GalleryStore(
+    tagsPath,
+    groupPath,
+    imagesPath
+  );
+
+  galleryStore.load();
+
   if (!fs.existsSync(userDataPath)) fs.mkdirSync(userDataPath, { recursive: true })
   if (!fs.existsSync(configPath)) fs.writeFileSync(configPath, JSON.stringify({}), 'utf-8')
   if (!fs.existsSync(tagsPath)) fs.writeFileSync(tagsPath, JSON.stringify({}), 'utf-8')
@@ -240,7 +231,8 @@ async function addImage(): Promise<boolean> {
   for (const selectedFile of result.filePaths) {
     const fileName = path.basename(selectedFile)
     const destination = path.join(imagesPath, fileName)
-    createTags(imagesPath, tagsPath, destination, null, [])
+    galleryStore.addImageFromPath(destination)
+    //createTags(imagesPath, tagsPath, destination, null, [])
     try {
       fs.copyFileSync(selectedFile, destination)
       copiedPaths.push(destination)
@@ -254,17 +246,19 @@ async function addImage(): Promise<boolean> {
 
 // IPC: сохранить теги
 ipcMain.handle('save-tags', async (_, name, tags, order) => {
-  saveTags(tagsPath, name, tags, order)
+  // saveTags(tagsPath, name, tags, order)
+  galleryStore.setTag(name, tags, order)
   return true
 })
 
-// IPC: загрузить теги
+// IPC: загрузить изображение
 ipcMain.handle('readFileAsBase64', async (_, filePath: string) => {
   return await imgbase64(filePath)
 })
 
 ipcMain.handle('load-image', async (_, filters: Filter, page: number = 0): Promise<Images> => {
-  const data = await getImagesFromFolder(tagsPath, imagesPath, filters, page, IMG_IN_PAGE)
+  // const data = await getImagesFromFolder(tagsPath, imagesPath, filters, page, IMG_IN_PAGE)
+  const data = galleryStore.getImages(filters, page, IMG_IN_PAGE)
   return {
     imgs: data.img,
     page: page + 1,
@@ -272,10 +266,13 @@ ipcMain.handle('load-image', async (_, filters: Filter, page: number = 0): Promi
     pages: data.pages,
     imgInPage: IMG_IN_PAGE
   }
+
 })
 
 ipcMain.handle('load-image-no-tag', async (_, page: number = 0): Promise<Images> => {
-  const data = await getImagesFromFolderNotTag(tagsPath, imagesPath, page, IMG_IN_PAGE)
+  // const data = await getImagesFromFolderNotTag(tagsPath, imagesPath, page, IMG_IN_PAGE)
+  const data = galleryStore.getImageNoTag(page, IMG_IN_PAGE)
+  console.log(data)
   return {
     imgs: data.img,
     page: page + 1,
@@ -286,21 +283,26 @@ ipcMain.handle('load-image-no-tag', async (_, page: number = 0): Promise<Images>
 })
 
 ipcMain.handle('get-image', async (_event, name: string, filter: Filter) => {
-  const data = await getImage(tagsPath, imagesPath, name, filter)
+  const data = galleryStore.getImage(name, filter)
   return data
 })
 
 ipcMain.handle('delete-image', async (_event, name: string) => {
-  const data = await deleteImage(tagsPath, groupPath, imagesPath, name)
+  const data = galleryStore.deleteImage(name)
+  //galleryStore.reload()
   return data
 })
 
 ipcMain.handle('rename-image', async (_event, oldName: string, newName: string) => {
-  return await renameInFile(tagsPath, groupPath, oldName, newName)
+  const res = galleryStore.renameImage(oldName, newName)
+  //galleryStore.reload()
+  return res
 })
 
 ipcMain.handle('rename-image-file', async (_event, oldName: string, newName: string) => {
-  return await renameImageFile(tagsPath, groupPath, imagesPath, oldName, newName)
+  const res = galleryStore.renameImageFile(oldName, newName)
+  //galleryStore.reload()
+  return res
 })
 
 ipcMain.handle('select-data-folder', async () => {
@@ -319,41 +321,59 @@ ipcMain.handle('select-data-folder', async () => {
 })
 
 ipcMain.handle('add-image-in-group', async (_event, group: string, image: string) => {
-  return await addArrToSequence(groupPath, group, [image])
+  const res = galleryStore.addArrToSequence(group, [image])
+  //galleryStore.reload()
+  return res
 })
 
 ipcMain.handle('add-images-in-group', async (_event, group: string, image: string[]) => {
-  return await addArrToSequence(groupPath, group, image)
+  const res =  galleryStore.addArrToSequence(group, image)
+  //galleryStore.reload()
+  return res
 })
 
 ipcMain.handle('delete-image-in-group', async (_event, group: string, image: string) => {
-  return await removeFromSequence(groupPath, group, image)
+    const res =  galleryStore.removeFromSequence(group, image)
+    //galleryStore.reload()
+  return res
 })
 
 ipcMain.handle('get-all-groups', async (_event) => {
-  return await getAllGroups(groupPath)
+   return galleryStore.getAllGroups();
+  //return await getAllGroups(groupPath)
 })
 
 ipcMain.handle('get-group', async (_event, group: string) => {
-  return await getGroup(tagsPath, imagesPath, groupPath, group)
+  return galleryStore.getGroup(group)
+  //return await getGroup(group)
 })
 
 ipcMain.handle('delete-group', async (_event, group: string) => {
-  return await deleteSequence(groupPath, group)
+   //const res =  await deleteSequence(groupPath, group)
+    // galleryStore.reload()
+  const res = galleryStore.deleteSequence(group)
+  return res
 })
 
 ipcMain.handle('reorder-in-group', async (_event, group: string, images: string[]) => {
-  return await reorderSequence(groupPath, group, images)
+   const res =  galleryStore.reorderSequence(group, images)
+     galleryStore.reload()
+  return res
 })
 
 ipcMain.handle('reorder-group', async (_event, groups: string[]) => {
-  return await reorderGroups(groupPath, groups)
+  //  const res =  await reorderGroups(groupPath, groups)
+   //  galleryStore.reload()
+   const res = galleryStore.reorderGroups(groups)
+  return res
 })
 
 ipcMain.handle(
   'load-image-with-group',
   async (_, filters: Filter, page: number = 0): Promise<ImagesWithGroup> => {
-    const data = await getGalleryItems(tagsPath, imagesPath, groupPath, filters, page, IMG_IN_PAGE)
+    console.log('load-image-with-group', filters, page)
+    const data = galleryStore.getGalleryItems(filters, page, IMG_IN_PAGE)
+    console.log('load-image-with-group', data)
     return {
       imgs: data.items,
       page: page + 1,
@@ -365,16 +385,18 @@ ipcMain.handle(
 )
 
 ipcMain.handle('get-image-with-group', async (_event, name: [string, string?], filter: Filter) => {
-  const data = await getImageWhithGroup(tagsPath, imagesPath, name, groupPath, filter)
+  const data = galleryStore.getImageWithGroup(name, filter)
   return data
 })
 
 ipcMain.handle('rename-group', async (_event, oldName:string, newName: string) => {
-  await renameGroup(groupPath, oldName, newName)
+  //await renameGroup(groupPath, oldName, newName)
+  galleryStore.renameGroup(oldName, newName)
 })
 
 ipcMain.handle('get-all-tags', async (_event) => {
-  return getAllTags(tagsPath)
+  //return getAllTags(tagsPath)
+  return galleryStore.getAllTags()
 })
 
 ipcMain.on("menu-set", (_event, label) => {
@@ -393,5 +415,6 @@ ipcMain.on("menu-set", (_event, label) => {
 });
 
 ipcMain.handle('get-group-by-image', async (_event, name: string) => {
-  return getGroupsByImage(groupPath, name)
+  return galleryStore.getGroupsByImage(name)
+  //return getGroupsByImage(groupPath, name)
 })

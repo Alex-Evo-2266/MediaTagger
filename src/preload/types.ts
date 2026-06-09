@@ -85,3 +85,17 @@ export type GroupInFile = {
   order: string[]
   groups: Record<string, string[]>
 }
+
+export type TagData = {
+  tags: string[]
+  path: string
+  order?: string
+}
+
+
+// export interface ImageMeta extends TagData {
+//     name: string;
+//     fullPath: string;
+// }
+
+export type TagsFileType = Record<string, TagData>
