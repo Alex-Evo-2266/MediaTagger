@@ -65,9 +65,9 @@ export const ImageDialogWithGroup: React.FC<IImageDialog> = ({
   }, [currentImgName, filter])
 
   const loadGroups = useCallback(async() => {
-    const data = await window.api.getGroupsByImage(name)
+    const data = await window.api.getGroupsByImage(currentImgName[0])
     setGroups(data)
-  },[])
+  }, [currentImgName])
 
   useEffect(() => {
     load()
