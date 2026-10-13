@@ -12,7 +12,8 @@ import {
   IconButton,
   DialogContentText,
   Snackbar,
-  Alert
+  Alert,
+  Autocomplete
 } from '@mui/material'
 import { useState, useEffect, useCallback } from 'react'
 import { Filter, Image64 } from 'src/preload/types'
@@ -42,6 +43,7 @@ export const ImageDialog: React.FC<IImageDialog> = ({
   const [currentImgName, setCurrentImgName] = useState(name)
   const [tags, setTags] = useState<string[]>([])
   const [tagInput, setTagInput] = useState('')
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
   const [editing, setEditing] = useState(false)
   const [order, setOrder] = useState<string | null>(null)
   const [alert, setAlert] = useState<string | null>(null)
@@ -88,11 +90,32 @@ export const ImageDialog: React.FC<IImageDialog> = ({
     if (file?.next) setCurrentImgName(file.next)
   }
 
-  const handleAddTag = (): void => {
-    if (tagInput.trim() !== '' && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()])
-      setTagInput('')
+  useEffect(() => {
+    const value = tagInput.trim()
+
+    if (!value) {
+      setTagSuggestions([])
+      return
     }
+
+    window.api.getTagSuggestions(value, 10).then((res) => setTagSuggestions(res))
+  }, [tagInput])
+
+  const handleAddTag = async (value?: string): Promise<void> => {
+    const nextValue = (value ?? tagInput).trim()
+
+    if (!nextValue) {
+      return
+    }
+
+    const normalized = await window.api.normalizeTag(nextValue)
+
+    if (normalized && !tags.some((tag) => tag.toLowerCase() === normalized.toLowerCase())) {
+      setTags((prev) => [...prev, normalized])
+    }
+
+    setTagInput('')
+    setTagSuggestions([])
   }
 
   const handleDeleteTag = (tagToDelete: string): void => {
@@ -245,19 +268,34 @@ export const ImageDialog: React.FC<IImageDialog> = ({
 
           {editing && (
             <Box display="flex" gap={1} mb={2}>
-              <TextField
-                fullWidth
-                label="Добавить тег"
-                value={tagInput}
-                onChange={(e) => setTagInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault()
-                    handleAddTag()
+              <Autocomplete
+                freeSolo
+                disablePortal
+                options={tagSuggestions}
+                inputValue={tagInput}
+                onInputChange={(_, value) => setTagInput(value)}
+                onChange={(_, value) => {
+                  if (typeof value === 'string' && value.trim()) {
+                    void handleAddTag(value)
                   }
                 }}
+                filterOptions={(options) => options}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label="Добавить тег"
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        e.preventDefault()
+                        void handleAddTag(tagInput)
+                      }
+                    }}
+                  />
+                )}
+                sx={{ flex: 1 }}
               />
-              <Button variant="contained" onClick={handleAddTag}>
+              <Button variant="contained" onClick={() => void handleAddTag(tagInput)}>
                 Добавить
               </Button>
               <Button variant="outlined" onClick={handleCopy}>

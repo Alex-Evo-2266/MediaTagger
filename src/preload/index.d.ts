@@ -26,6 +26,8 @@ interface API {
   reorderGroup: (groups: string[]) => Promise<void>
   renameGroup: (oldName: string, newName: string) => Promise<void>
   getAllTags: () => Promise<string[]>
+  getTagSuggestions: (term: string, limit?: number) => Promise<string[]>
+  normalizeTag: (tag: string) => Promise<string>
   setMenuItem: (label: string) => Promise<void>
   getGroupsByImage: (name: string) => Promise<string[]>
   mergeDuplicatePaths: (callback: (updated: {

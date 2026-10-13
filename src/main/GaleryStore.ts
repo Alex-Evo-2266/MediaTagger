@@ -63,7 +63,7 @@ export class GalleryStore {
             this.images.set(name, {
                 name,
                 path: value.path,
-                tags: value.tags ?? [],
+                tags: this.normalizeTags(value.tags ?? []),
                 order: value.order,
                 fullPath: path.join(
                     this.imagesPath,
@@ -89,10 +89,88 @@ export class GalleryStore {
         }
     }
 
+    normalizeTag(tag: string): string {
+        return tag.trim().replace(/\s+/g, ' ').toLowerCase();
+    }
+
+    normalizeTags(tags: string[]): string[] {
+        const unique = new Set<string>();
+        const normalized: string[] = [];
+
+        for (const tag of tags) {
+            const value = this.normalizeTag(tag);
+
+            if (!value || unique.has(value)) {
+                continue;
+            }
+
+            unique.add(value);
+            normalized.push(value);
+        }
+
+        return normalized;
+    }
+
+    private levenshteinDistance(left: string, right: string): number {
+        if (left === right) return 0;
+        if (!left.length) return right.length;
+        if (!right.length) return left.length;
+
+        const matrix = Array.from({ length: left.length + 1 }, () => Array(right.length + 1).fill(0));
+
+        for (let i = 0; i <= left.length; i += 1) matrix[i][0] = i;
+        for (let j = 0; j <= right.length; j += 1) matrix[0][j] = j;
+
+        for (let i = 1; i <= left.length; i += 1) {
+            for (let j = 1; j <= right.length; j += 1) {
+                const cost = left[i - 1] === right[j - 1] ? 0 : 1;
+                matrix[i][j] = Math.min(
+                    matrix[i - 1][j] + 1,
+                    matrix[i][j - 1] + 1,
+                    matrix[i - 1][j - 1] + cost
+                );
+            }
+        }
+
+        return matrix[left.length][right.length];
+    }
+
+    getTagSuggestions(term: string, limit: number = 20): string[] {
+        const normalized = this.normalizeTag(term);
+        const allTags = this.getAllTags();
+
+        if (!normalized) {
+            return allTags.slice(0, limit);
+        }
+
+        const exactMatches = allTags.filter((tag) => tag === normalized);
+        const prefixMatches = allTags.filter((tag) => tag.startsWith(normalized) && tag !== normalized);
+        const containsMatches = allTags.filter(
+            (tag) => tag.includes(normalized) && !exactMatches.includes(tag) && !prefixMatches.includes(tag)
+        );
+
+        const maxDistance = Math.max(1, Math.ceil(normalized.length * 0.2));
+        const fuzzyMatches = allTags.filter((tag) => {
+            if (exactMatches.includes(tag) || prefixMatches.includes(tag) || containsMatches.includes(tag)) {
+                return false;
+            }
+
+            if (normalized.length < 3) {
+                return false;
+            }
+
+            return this.levenshteinDistance(tag, normalized) <= maxDistance;
+        });
+
+        return [...exactMatches, ...prefixMatches, ...containsMatches, ...fuzzyMatches].slice(0, limit);
+    }
+
     private buildIndexes() {
         for (const image of this.images.values()) {
             for (const tag of image.tags) {
-                const key = tag.toLowerCase();
+                const key = this.normalizeTag(tag);
+
+                if (!key) continue;
 
                 if (!this.tagIndex.has(key)) {
                     this.tagIndex.set(key, new Set());
@@ -123,7 +201,7 @@ export class GalleryStore {
     setTag(name: string, tags: string[], order?: string){
         const img = this.images.get(name)
         if (!img) return
-        img.tags = tags
+        img.tags = this.normalizeTags(tags)
         img.order = order
 
         this.tagIndex.clear();
@@ -645,7 +723,9 @@ export class GalleryStore {
     }
             
     getAllTags(): string[] {
-        return Array.from(this.tagIndex.keys());
+        return Array.from(this.tagIndex.keys()).sort((a, b) =>
+            a.localeCompare(b, undefined, { sensitivity: 'base' })
+        );
     }
 
     renameGroup(oldName: string, newName: string): void {
@@ -770,7 +850,7 @@ export class GalleryStore {
         if (!image) return;
 
         // обновляем данные
-        image.tags = tags;
+        image.tags = this.normalizeTags(tags);
 
         // сохраняем
         this.saveTagsFile();
@@ -985,7 +1065,7 @@ export class GalleryStore {
         for (const image of this.images.values()) {
             out[image.name] = {
                 path: image.path,
-                tags: image.tags,
+                tags: this.normalizeTags(image.tags),
                 order: image.order
             };
         }

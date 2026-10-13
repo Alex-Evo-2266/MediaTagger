@@ -38,6 +38,8 @@ contextBridge.exposeInMainWorld('api', {
   reorderGroup: (groups: string[]) => ipcRenderer.invoke('reorder-group', groups),
   renameGroup: (oldName: string, newName: string) => ipcRenderer.invoke('rename-group', oldName, newName),
   getAllTags: () => ipcRenderer.invoke('get-all-tags'),
+  getTagSuggestions: (term: string, limit?: number) => ipcRenderer.invoke('get-tag-suggestions', term, limit),
+  normalizeTag: (tag: string) => ipcRenderer.invoke('normalize-tag', tag),
   setMenuItem: (label:string) => ipcRenderer.send('menu-set', label),
   mergeDuplicatePaths: (callback: (updated: {removedPaths: string[], updatePaths: string[]}) => void) =>
     ipcRenderer.on('tags-updated', (_event, updated) => callback(updated)),

@@ -399,6 +399,14 @@ ipcMain.handle('get-all-tags', async (_event) => {
   return galleryStore.getAllTags()
 })
 
+ipcMain.handle('get-tag-suggestions', async (_event, term: string, limit?: number) => {
+  return galleryStore.getTagSuggestions(term, limit ?? 20)
+})
+
+ipcMain.handle('normalize-tag', async (_event, tag: string) => {
+  return galleryStore.normalizeTag(tag)
+})
+
 ipcMain.on("menu-set", (_event, label) => {
   const menu = Menu.getApplicationMenu();
 

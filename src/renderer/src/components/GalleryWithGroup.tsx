@@ -6,7 +6,8 @@ import {
   Chip,
   Typography,
   Card,
-  CardContent
+  CardContent,
+  Autocomplete
 } from '@mui/material'
 import Grid from '@mui/material/Grid'
 import { useCallback, useEffect, useState } from 'react'
@@ -30,6 +31,7 @@ export const GalleryWithGroup: React.FC<GalleryProps> = ({initTag = []}) => {
   const [tagInput, setTagInput] = useState<string>('')
   const [search, setSearch] = useState<string>('')
   const [tags, setTags] = useState<string[]>(initTag)
+  const [tagSuggestions, setTagSuggestions] = useState<string[]>([])
 
   console.log(initTag, tags)
 
@@ -51,15 +53,33 @@ export const GalleryWithGroup: React.FC<GalleryProps> = ({initTag = []}) => {
     })
   }, [load])
 
-  // Добавление тега
-  const handleAddTag = (e: React.KeyboardEvent<HTMLInputElement>): void => {
-    if (e.key === 'Enter' && tagInput.trim() !== '') {
-      e.preventDefault()
-      if (!tags.includes(tagInput.trim())) {
-        setTags([...tags, tagInput.trim()])
-      }
-      setTagInput('')
+  useEffect(() => {
+    const value = tagInput.trim()
+
+    if (!value) {
+      setTagSuggestions([])
+      return
     }
+
+    window.api.getTagSuggestions(value, 10).then((res) => setTagSuggestions(res))
+  }, [tagInput])
+
+  // Добавление тега
+  const handleAddTag = async (value?: string): Promise<void> => {
+    const nextValue = (value ?? tagInput).trim()
+
+    if (!nextValue) {
+      return
+    }
+
+    const normalized = await window.api.normalizeTag(nextValue)
+
+    if (normalized && !tags.some((tag) => tag.toLowerCase() === normalized.toLowerCase())) {
+      setTags((prev) => [...prev, normalized])
+    }
+
+    setTagInput('')
+    setTagSuggestions([])
   }
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -88,14 +108,33 @@ export const GalleryWithGroup: React.FC<GalleryProps> = ({initTag = []}) => {
     <Box p={2} display="flex" flexDirection="column" height="100vh">
       {/* Поле для ввода тегов */}
       <Box mb={2}>
-        <TextField
-          label="Фильтр по тегам"
-          variant="outlined"
-          size="small"
-          value={tagInput}
-          onChange={(e) => setTagInput(e.target.value)}
-          onKeyDown={handleAddTag}
-          fullWidth
+        <Autocomplete
+          freeSolo
+          disablePortal
+          options={tagSuggestions}
+          inputValue={tagInput}
+          onInputChange={(_, value) => setTagInput(value)}
+          onChange={(_, value) => {
+            if (typeof value === 'string' && value.trim()) {
+              void handleAddTag(value)
+            }
+          }}
+          filterOptions={(options) => options}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label="Фильтр по тегам"
+              variant="outlined"
+              size="small"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault()
+                  void handleAddTag(tagInput)
+                }
+              }}
+              fullWidth
+            />
+          )}
         />
         <Stack direction="row" spacing={1} mt={1} flexWrap="wrap">
           {tags.map((tag) => (
